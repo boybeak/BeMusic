@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.nulldreams.bemusic.MainActivity">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentTop="true"
+        >
+        <Button
+            android:id="@+id/start_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="startS"
+            android:text="start service"
+            android:layout_weight="1"
+            />
+        <Button
+            android:id="@+id/bind_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="bindS"
+            android:text="bind service"
+            android:layout_weight="1"
+            />
+        <Button
+            android:id="@+id/stop_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="stopS"
+            android:text="stop service"
+            android:layout_weight="1"
+            />
+        <Button
+            android:id="@+id/unbind_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="unbindS"
+            android:text="unbind service"
+            android:layout_weight="1"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        >
+        <Button
+            android:id="@+id/previous"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="previous"
+            android:layout_weight="1"
+            />
+        <Button
+            android:id="@+id/start_pause"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="start pause"
+            android:layout_weight="1"
+            android:onClick="startPlay"
+            />
+        <Button
+            android:id="@+id/forward"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="forward"
+            android:layout_weight="1"
+            />
+    </LinearLayout>
+</RelativeLayout>
