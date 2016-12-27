@@ -18,6 +18,7 @@
         android:maxLines="1"
         android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
         android:layout_toRightOf="@+id/song_thumb"
+        android:ellipsize="end"
         />
     <TextView
         android:id="@+id/song_duration"
@@ -35,6 +36,7 @@
         android:layout_alignLeft="@+id/song_title"
         android:layout_below="@+id/song_title"
         android:layout_toLeftOf="@+id/song_duration"
+        android:ellipsize="end"
         />
 
 </RelativeLayout>

@@ -50,6 +50,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Title"
                 android:textColor="@android:color/white"
                 android:maxLines="1"
+                android:ellipsize="end"
                 />
             <TextView
                 android:id="@+id/main_mini_artist_album"
@@ -58,6 +59,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textColor="@android:color/white"
                 android:maxLines="1"
+                android:ellipsize="end"
                 />
         </LinearLayout>
 

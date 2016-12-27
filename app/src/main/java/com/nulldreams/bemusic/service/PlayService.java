@@ -42,6 +42,7 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
+        setPlayerState(STATE_ERROR);
         return false;
     }
 
