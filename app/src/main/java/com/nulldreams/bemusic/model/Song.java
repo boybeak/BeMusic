@@ -1,7 +1,10 @@
 package com.nulldreams.bemusic.model;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.provider.MediaStore;
+
+import java.io.File;
 
 /**
  * Created by boybe on 2016/12/26.
@@ -13,6 +16,9 @@ public class Song {
             year;
     private int id, albumId, artistId, duration, size, track;
     private boolean isRingtone, isPodcast, isAlarm, isMusic, isNotification;
+
+    private File mCoverFile;
+
     public Song (Bundle bundle) {
         id = bundle.getInt(MediaStore.Audio.Media._ID);
         title = bundle.getString(MediaStore.Audio.Media.TITLE);
@@ -89,5 +95,20 @@ public class Song {
 
     public boolean isNotification() {
         return isNotification;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj != null && obj instanceof Song) {
+            return ((Song) obj).id == id;
+        }
+        return false;
+    }
+
+    public File getCoverFile (Context context) {
+        if (mCoverFile == null) {
+            mCoverFile = new File(context.getExternalCacheDir(), "covers" + File.separator + getTitle() + "_" + getArtist() + "_" + getAlbum() + ".jpg");
+        }
+        return mCoverFile;
     }
 }

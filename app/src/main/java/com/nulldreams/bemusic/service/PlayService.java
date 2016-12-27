@@ -60,9 +60,11 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
     private @State int mState = STATE_IDLE;
 
     private MediaPlayer mPlayer = null;
-    private Song mCurrentSong;
+    //private Song mCurrentSong;
 
     private PlayBinder mBinder = null;
+
+    private PlayStateChangeListener mStateListener;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -96,6 +98,9 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
             return;
         }
         mState = state;
+        if (mStateListener != null) {
+            mStateListener.onStateChanged(mState);
+        }
     }
 
     private void ensurePlayer () {
@@ -110,11 +115,11 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
         mPlayer.setOnSeekCompleteListener(this);
     }
 
-    public void startPlayer (Song song) {
-        mCurrentSong = song;
+    public void startPlayer (String path) {
+        releasePlayer();
         ensurePlayer();
         try {
-            mPlayer.setDataSource(mCurrentSong.getPath());
+            mPlayer.setDataSource(path);
             setPlayerState(STATE_INITIALIZED);
             mPlayer.prepareAsync();
             setPlayerState(STATE_PREPARING);
@@ -142,7 +147,7 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
         }
     }
 
-    private void releasePlayer () {
+    public void releasePlayer () {
         if (mPlayer != null) {
             mPlayer.release();
             mPlayer = null;
@@ -162,8 +167,20 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
         return mState == STATE_RELEASED;
     }
 
+    public @State int getState () {
+        return mState;
+    }
+
     private void showNotify (@State int state) {
 
+    }
+
+    public void setPlayStateChangeListener (PlayStateChangeListener listener) {
+        mStateListener = listener;
+    }
+
+    public interface PlayStateChangeListener {
+        void onStateChanged (@State int state);
     }
 
     public class PlayBinder extends Binder {

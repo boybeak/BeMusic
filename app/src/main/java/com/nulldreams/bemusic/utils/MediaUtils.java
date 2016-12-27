@@ -8,6 +8,7 @@ import android.provider.MediaStore;
 
 import com.nulldreams.bemusic.model.Song;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +17,9 @@ import java.util.List;
  */
 
 public class MediaUtils {
+
+    public static final DecimalFormat FORMAT = new DecimalFormat("00");
+
     public static final String[] AUDIO_KEYS = new String[]{
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Media.TITLE,
@@ -82,5 +86,12 @@ public class MediaUtils {
         }
         cursor.close();
         return audioList;
+    }
+
+    public static String formatTime (int durationInMilliseconds) {
+        int seconds = durationInMilliseconds /  1000;
+        int minutes = seconds / 60;
+        int secondsRemain = seconds % 60;
+        return FORMAT.format(minutes) + ":" + FORMAT.format(secondsRemain);
     }
 }
