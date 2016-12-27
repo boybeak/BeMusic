@@ -74,6 +74,8 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
         if (songs != null) {
             setupPlayList(songs);
         }
+
+        mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
     }
 
     @Override
