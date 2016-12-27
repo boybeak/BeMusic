@@ -37,7 +37,7 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-
+        setPlayerState(STATE_COMPLETED);
     }
 
     @Override
@@ -169,10 +169,6 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
 
     public @State int getState () {
         return mState;
-    }
-
-    private void showNotify (@State int state) {
-
     }
 
     public void setPlayStateChangeListener (PlayStateChangeListener listener) {

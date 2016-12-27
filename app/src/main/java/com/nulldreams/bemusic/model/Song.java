@@ -12,9 +12,8 @@ import java.io.File;
 
 public class Song {
     private String title, titleKey, artist, artistKey,
-            album, albumKey, displayName, mimeType, path,
-            year;
-    private int id, albumId, artistId, duration, size, track;
+            album, albumKey, displayName, mimeType, path;
+    private int id, albumId, artistId, duration, size, year, track;
     private boolean isRingtone, isPodcast, isAlarm, isMusic, isNotification;
 
     private File mCoverFile;
@@ -29,7 +28,7 @@ public class Song {
         album = bundle.getString(MediaStore.Audio.Media.ALBUM);
         albumKey = bundle.getString(MediaStore.Audio.Media.ALBUM_KEY);
         displayName = bundle.getString(MediaStore.Audio.Media.DISPLAY_NAME);
-        year = bundle.getString(MediaStore.Audio.Media.YEAR);
+        year = bundle.getInt(MediaStore.Audio.Media.YEAR);
         mimeType = bundle.getString(MediaStore.Audio.Media.MIME_TYPE);
         path = bundle.getString(MediaStore.Audio.Media.DATA);
 

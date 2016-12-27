@@ -1,8 +1,12 @@
 package com.nulldreams.bemusic.manager;
 
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,8 +15,15 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.support.v7.app.NotificationCompat;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.model.Song;
+import com.nulldreams.bemusic.receiver.NoisyBroadcastReceiver;
 import com.nulldreams.bemusic.service.PlayService;
 import com.nulldreams.bemusic.utils.MediaUtils;
 
@@ -49,6 +60,24 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         public void onServiceDisconnected(ComponentName name) {
             mService.setPlayStateChangeListener(null);
             mService = null;
+        }
+    };
+
+    private NoisyBroadcastReceiver mNoisyReceiver = new NoisyBroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+                // Pause the playback
+            }
+        }
+
+    };
+
+    private AudioManager.OnAudioFocusChangeListener mAfListener = new AudioManager.OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+
         }
     };
 
@@ -122,6 +151,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         }.execute(mContext);
     }
 
+    public List<Song> getTotalList () {
+        return mTotalList;
+    }
+
     private void bindPlayService () {
         mContext.bindService(new Intent(mContext, PlayService.class), mConnection, Context.BIND_AUTO_CREATE);
     }
@@ -135,27 +168,58 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         mContext.stopService(new Intent(mContext, PlayService.class));
     }
 
-    public void dispatch(Song song) {
-        AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-        audioManager.requestAudioFocus(new AudioManager.OnAudioFocusChangeListener() {
-            @Override
-            public void onAudioFocusChange(int focusChange) {
+    public void dispatch () {
+        dispatch(mSong);
+    }
 
-            }
-        }, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_LOSS);
-        if (mService != null) {
-            if (song.equals(mSong)) {
-                if (mService.isStarted()) {
-                    mService.pausePlayer();
+    public void dispatch(final Song song) {
+
+        if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
+            if (mService != null) {
+                if (song.equals(mSong)) {
+                    if (mService.isStarted()) {
+                        pause();
+                    } else {
+                        resume();
+                    }
                 } else {
-                    mService.resumePlayer();
+                    mSong = song;
+                    mService.startPlayer(song.getPath());
                 }
-            } else {
-                mService.startPlayer(song.getPath());
-                mSong = song;
             }
         }
 
+    }
+
+    public void forward () {
+
+    }
+
+    public void previous () {
+
+    }
+
+    public void resume () {
+        mService.resumePlayer();
+    }
+
+    public void pause () {
+        mService.pausePlayer();
+    }
+
+    public boolean isPlaying () {
+        return mService != null && mService.isStarted();
+    }
+
+    private int requestAudioFocus () {
+        AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        return audioManager.requestAudioFocus(
+                mAfListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+    }
+
+    private int releaseAudioFocus () {
+        AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        return audioManager.abandonAudioFocus(mAfListener);
     }
 
     public void registerCallback (Callback callback) {
@@ -171,11 +235,75 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         }
     }
 
+    private void registerNoisyReceiver () {
+        if (!mNoisyReceiver.isRegistered()) {
+            mContext.registerReceiver(mNoisyReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
+            mNoisyReceiver.setRegistered(true);
+        }
+    }
+
+    private void unregisterNoisyReceiver () {
+        if (mNoisyReceiver.isRegistered()) {
+            mContext.unregisterReceiver(mNoisyReceiver);
+            mNoisyReceiver.setRegistered(false);
+        }
+    }
+
     @Override
     public void onStateChanged(@PlayService.State int state) {
+
+        switch (state) {
+            case PlayService.STATE_STARTED:
+                registerNoisyReceiver();
+                break;
+            case PlayService.STATE_PAUSED:
+                unregisterNoisyReceiver();
+                releaseAudioFocus();
+                break;
+            case PlayService.STATE_ERROR:
+                unregisterNoisyReceiver();
+                releaseAudioFocus();
+                break;
+            case PlayService.STATE_STOPPED:
+                unregisterNoisyReceiver();
+                releaseAudioFocus();
+                break;
+            case PlayService.STATE_COMPLETED:
+                unregisterNoisyReceiver();
+                releaseAudioFocus();
+                break;
+            case PlayService.STATE_RELEASED:
+                unregisterNoisyReceiver();
+                releaseAudioFocus();
+                break;
+        }
         for (Callback callback : mCallbacks) {
             callback.onPlayStateChanged(state, mSong);
         }
+        notification(state);
+    }
+
+    private void notification (@PlayService.State int state) {
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
+        builder.addAction(new android.support.v4.app.NotificationCompat.Action(R.drawable.ic_play_pause_sel, "play", PendingIntent.getBroadcast(
+                mContext, 100, new Intent("play_pause"), PendingIntent.FLAG_ONE_SHOT
+        )));
+        builder.setContentTitle(mSong.getTitle());
+        builder.setContentText(mSong.getArtist() + " - " + mSong.getAlbum());
+        builder.setWhen(System.currentTimeMillis());
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        boolean onGoing = isPlaying();
+        builder.setOngoing(onGoing);
+        builder.setAutoCancel(!onGoing);
+        final Notification notification = builder.build();
+        Glide.with(mContext).load(mSong.getCoverFile(mContext)).asBitmap().into(new SimpleTarget<Bitmap>() {
+            @Override
+            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                builder.setLargeIcon(resource);
+                mService.startForeground(1, notification);
+            }
+        });
+
     }
 
     public interface Callback {

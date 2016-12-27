@@ -9,6 +9,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginRight="16dp"
+        android:scaleType="centerCrop"
         />
     <TextView
         android:id="@+id/song_title"
