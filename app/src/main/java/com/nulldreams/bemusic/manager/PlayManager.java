@@ -69,6 +69,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         public void onReceive(Context context, Intent intent) {
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
                 // Pause the playback
+                pause();
             }
         }
 
@@ -77,7 +78,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
     private AudioManager.OnAudioFocusChangeListener mAfListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
         public void onAudioFocusChange(int focusChange) {
-
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                pause();
+            }
         }
     };
 
@@ -211,6 +214,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         return mService != null && mService.isStarted();
     }
 
+    public Song getCurrentSong () {
+        return mSong;
+    }
+
     private int requestAudioFocus () {
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         return audioManager.requestAudioFocus(
@@ -236,17 +243,19 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
     }
 
     private void registerNoisyReceiver () {
-        if (!mNoisyReceiver.isRegistered()) {
+        mNoisyReceiver.register(mContext, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
+        /*if (!mNoisyReceiver.isRegistered()) {
             mContext.registerReceiver(mNoisyReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
             mNoisyReceiver.setRegistered(true);
-        }
+        }*/
     }
 
     private void unregisterNoisyReceiver () {
-        if (mNoisyReceiver.isRegistered()) {
+        mNoisyReceiver.unregister(mContext);
+        /*if (mNoisyReceiver.isRegistered()) {
             mContext.unregisterReceiver(mNoisyReceiver);
             mNoisyReceiver.setRegistered(false);
-        }
+        }*/
     }
 
     @Override

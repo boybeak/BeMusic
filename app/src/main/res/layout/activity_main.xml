@@ -5,24 +5,29 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.nulldreams.bemusic.MainActivity">
+    tools:context="com.nulldreams.bemusic.activity.MainActivity">
     <RelativeLayout
         android:id="@+id/main_mini_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:minHeight="?actionBarSize"
         android:layout_alignParentBottom="true"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
         android:background="@color/colorPrimary"
         android:visibility="gone"
         >
+        <ImageView
+            android:id="@+id/main_mini_panel_bg"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            android:scaleType="centerCrop"
+            />
         <ImageView
             android:id="@+id/main_mini_thumb"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:scaleType="centerCrop"
             android:layout_centerVertical="true"
+            android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             />
         <ImageView
@@ -33,6 +38,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentRight="true"
             android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             app:srcCompat="@drawable/ic_play_pause_sel"
             />
         <LinearLayout

@@ -1,8 +1,11 @@
-package com.nulldreams.bemusic;
+package com.nulldreams.bemusic.activity;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
@@ -16,12 +19,17 @@ import com.bumptech.glide.Glide;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
+import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
+import com.nulldreams.bemusic.fragment.PlayDetailFragment;
 import com.nulldreams.bemusic.manager.PlayManager;
 import com.nulldreams.bemusic.model.Song;
 import com.nulldreams.bemusic.service.PlayService;
 
+import java.io.File;
 import java.util.List;
+
+import jp.wasabeef.glide.transformations.BlurTransformation;
 
 public class MainActivity extends AppCompatActivity implements PlayManager.Callback{
 
@@ -34,8 +42,10 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
     private DelegateAdapter mAdapter;
     private RecyclerView mRv;
     private View mMiniPanel;
-    private ImageView mThumbIv, mControlBtn;
+    private ImageView mMiniPanelBgIv, mThumbIv, mControlBtn;
     private TextView mTitleTv, mArtistAlbumTv;
+
+    PlayDetailFragment fragment = PlayDetailFragment.newInstance();
 
     private View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
@@ -43,9 +53,27 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
             final int id = v.getId();
             if (id == mControlBtn.getId()) {
                 PlayManager.getInstance(v.getContext()).dispatch();
+            } else if (id == mMiniPanel.getId()) {
+                showPlayDetail();
             }
         }
     };
+
+    private void showPlayDetail () {
+        FragmentManager manager = getSupportFragmentManager();
+        FragmentTransaction transaction = manager.beginTransaction();
+        transaction.add(R.id.activity_main, fragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    private void hidePlayDetail () {
+        FragmentManager manager = getSupportFragmentManager();
+        FragmentTransaction transaction = manager.beginTransaction();
+        transaction.remove(fragment);
+        manager.popBackStack();
+        transaction.commit();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
         setContentView(R.layout.activity_main);
 
         mMiniPanel = findViewById(R.id.main_mini_panel);
+        mMiniPanelBgIv = (ImageView)findViewById(R.id.main_mini_panel_bg);
         mThumbIv = (ImageView)findViewById(R.id.main_mini_thumb);
         mControlBtn = (ImageView)findViewById(R.id.main_mini_control_btn);
         mTitleTv = (TextView)findViewById(R.id.main_mini_title);
@@ -64,6 +93,7 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
         mRv.setAdapter(mAdapter);
 
         mControlBtn.setOnClickListener(mClickListener);
+        mMiniPanel.setOnClickListener(mClickListener);
     }
 
     @Override
@@ -115,9 +145,15 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
     public void onPlayStateChanged(@PlayService.State int state, Song song) {
         switch (state) {
             case PlayService.STATE_INITIALIZED:
-                Glide.with(this).load(song.getCoverFile(this)).placeholder(R.mipmap.ic_launcher).into(mThumbIv);
+
                 mTitleTv.setText(song.getTitle());
                 mArtistAlbumTv.setText(song.getArtist() + " - " + song.getAlbum());
+                File file = song.getCoverFile(this);
+                if (file.exists()) {
+                    Glide.with(this).load(file).placeholder(R.mipmap.ic_launcher).into(mThumbIv);
+                    Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in)
+                            .transform(new BlurTransformation(this)).into(mMiniPanelBgIv);
+                }
                 annimtionShowMiniPanel();
                 break;
             case PlayService.STATE_STARTED:
