@@ -23,6 +23,7 @@ import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.bemusic.fragment.PlayDetailFragment;
 import com.nulldreams.bemusic.manager.PlayManager;
+import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.model.Song;
 import com.nulldreams.bemusic.service.PlayService;
 
@@ -169,6 +170,11 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
                 mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
         }
+    }
+
+    @Override
+    public void onPlayRuleChanged(Rule rule) {
+
     }
 
     private void annimtionShowMiniPanel () {

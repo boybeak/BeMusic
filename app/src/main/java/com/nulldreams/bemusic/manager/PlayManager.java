@@ -15,6 +15,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.support.v7.app.NotificationCompat;
 
 import com.bumptech.glide.Glide;
@@ -22,6 +23,8 @@ import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.nulldreams.bemusic.R;
+import com.nulldreams.bemusic.manager.ruler.Rule;
+import com.nulldreams.bemusic.manager.ruler.Rulers;
 import com.nulldreams.bemusic.model.Song;
 import com.nulldreams.bemusic.receiver.NoisyBroadcastReceiver;
 import com.nulldreams.bemusic.service.PlayService;
@@ -91,6 +94,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
     private List<Song> mTotalList = null;
     private Song mSong = null;
     private PlayService mService;
+
+    private Rule mPlayRule = Rulers.RULER_LIST_LOOP;
 
     private PlayManager (Context context) {
         mContext = context;
@@ -194,12 +199,27 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
 
     }
 
-    public void forward () {
+    public void setRule (@NonNull Rule rule) {
+        mPlayRule = rule;
+        for (Callback callback : mCallbacks) {
+            callback.onPlayRuleChanged(mPlayRule);
+        }
+    }
 
+    public void forward () {
+        forward(true);
+    }
+
+    private void forward (boolean isUserAction) {
+        dispatch(mPlayRule.forward(mSong, mTotalList, isUserAction));
     }
 
     public void previous () {
+        previous(true);
+    }
 
+    private void previous (boolean isUserAction) {
+        dispatch(mPlayRule.previous(mSong, mTotalList, isUserAction));
     }
 
     public void resume () {
@@ -280,6 +300,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
             case PlayService.STATE_COMPLETED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
+                forward(false);
                 break;
             case PlayService.STATE_RELEASED:
                 unregisterNoisyReceiver();
@@ -318,6 +339,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
     public interface Callback {
         void onPlayListPrepared (List<Song> songs);
         void onPlayStateChanged (@PlayService.State int state, Song song);
+        void onPlayRuleChanged (Rule rule);
     }
 
 }
