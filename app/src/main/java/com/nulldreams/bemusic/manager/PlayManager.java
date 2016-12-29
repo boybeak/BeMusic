@@ -14,6 +14,7 @@ import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v7.app.NotificationCompat;
@@ -103,7 +104,28 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         }
     };
 
-    private List<Callback> mCallbacks = new ArrayList<>();
+    private int mPeriod = 1000;
+    private boolean isProgressUpdating = false;
+    private Runnable mProgressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mCallbacks != null && !mCallbacks.isEmpty()
+                    && mService != null && mSong != null && mService.isStarted()) {
+                for (ProgressCallback callback : mProgressCallbacks) {
+                    callback.onProgress(mService.getPosition(), mSong.getDuration());
+                }
+                mHandler.postDelayed(this, mPeriod);
+                isProgressUpdating = true;
+            } else {
+                isProgressUpdating = false;
+            }
+        }
+    };
+
+    private Handler mHandler = null;
+
+    private List<Callback> mCallbacks;
+    private List<ProgressCallback> mProgressCallbacks;
 
     private Context mContext;
 
@@ -115,6 +137,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
 
     private PlayManager (Context context) {
         mContext = context;
+        mCallbacks = new ArrayList<>();
+        mProgressCallbacks = new ArrayList<>();
+        mHandler = new Handler();
         new AsyncTask<Context, Integer, List<Song>>() {
 
             @Override
@@ -196,8 +221,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
             Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
             if (mService != null) {
-                Log.v(TAG, "dispatch equals=" + (song.equals(mSong)));
-                if (song.equals(mSong)) {
+                if (song == null && mSong == null) {
+                    Song defaultSong = mPlayRule.next(song, mTotalList, false);
+                    dispatch(defaultSong);
+                } else if (song.equals(mSong)) {
                     if (mService.isStarted()) {
                         pause();
                     } else if (mService.isPaused()){
@@ -292,6 +319,26 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         }
     }
 
+    private void startUpdateProgressIfNeed () {
+        if (!isProgressUpdating) {
+            mHandler.post(mProgressRunnable);
+        }
+    }
+
+    public void registerProgressCallback (ProgressCallback callback) {
+        if (mProgressCallbacks.contains(callback)) {
+            return;
+        }
+        mProgressCallbacks.add(callback);
+        startUpdateProgressIfNeed();
+    }
+
+    public void unregisterProgressCallback (ProgressCallback callback) {
+        if (mProgressCallbacks.contains(callback)) {
+            mProgressCallbacks.remove(callback);
+        }
+    }
+
     private void registerNoisyReceiver () {
         mNoisyReceiver.register(mContext, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
     }
@@ -307,6 +354,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
             case PlayService.STATE_STARTED:
                 registerNoisyReceiver();
                 notification(state);
+                startUpdateProgressIfNeed();
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
@@ -392,10 +440,25 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         }
     }
 
+    /*private void showNotificationLollipop (@PlayService.State int state) {
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
+        builder.setContentTitle(mSong.getTitle());
+        builder.setContentText(mSong.getArtistAlbum());
+        builder.setWhen(System.currentTimeMillis());
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+
+        MediaSessionManager sessionManager = (MediaSessionManager)mContext.getSystemService(Context.MEDIA_SESSION_SERVICE);
+        MediaController.
+    }*/
+
     public interface Callback {
         void onPlayListPrepared (List<Song> songs);
         void onPlayStateChanged (@PlayService.State int state, Song song);
         void onPlayRuleChanged (Rule rule);
+    }
+
+    public interface ProgressCallback {
+        void onProgress (int progress, int duration);
     }
 
 }

@@ -172,6 +172,19 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
         return mState;
     }
 
+    public int getPosition () {
+        if (mPlayer == null) {
+            return 0;
+        }
+
+        try {
+            return mPlayer.getCurrentPosition();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
     public void setPlayStateChangeListener (PlayStateChangeListener listener) {
         mStateListener = listener;
     }

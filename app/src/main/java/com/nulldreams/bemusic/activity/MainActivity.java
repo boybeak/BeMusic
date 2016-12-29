@@ -1,23 +1,30 @@
 package com.nulldreams.bemusic.activity;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
+import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.support.annotation.Nullable;
+import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.nulldreams.adapter.DelegateAdapter;
+import com.nulldreams.adapter.DelegateFilter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
+import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.bemusic.fragment.PlayDetailFragment;
@@ -30,8 +37,11 @@ import java.io.File;
 import java.util.List;
 
 import jp.wasabeef.glide.transformations.BlurTransformation;
+import jp.wasabeef.glide.transformations.CropCircleTransformation;
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
 
-public class MainActivity extends AppCompatActivity implements PlayManager.Callback{
+public class MainActivity extends AppCompatActivity
+        implements PlayManager.Callback, PlayManager.ProgressCallback{
 
     static {
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
@@ -41,9 +51,10 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
 
     private DelegateAdapter mAdapter;
     private RecyclerView mRv;
-    private View mMiniPanel;
-    private ImageView mMiniPanelBgIv, mThumbIv, mControlBtn, mNextBtn;
-    private TextView mTitleTv, mArtistAlbumTv;
+    private CollapsingToolbarLayout mToolbarLayout;
+    private Toolbar mToolbar;
+    private ImageView mCoverIv, mThumbView;
+    private FloatingActionButton mFab;
 
     PlayDetailFragment fragment = PlayDetailFragment.newInstance();
 
@@ -51,13 +62,21 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
         @Override
         public void onClick(View v) {
             final int id = v.getId();
-            if (id == mControlBtn.getId()) {
+            if (id == mFab.getId()) {
                 PlayManager.getInstance(v.getContext()).dispatch();
-            } else if (id == mMiniPanel.getId()) {
+            }/* else if (id == mMiniPanel.getId()) {
                 showPlayDetail();
             } else if (id == mNextBtn.getId()) {
                 PlayManager.getInstance(v.getContext()).next();
-            }
+            }*/
+        }
+    };
+    private boolean isIdle = true, isResumed = false;
+    private RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            super.onScrollStateChanged(recyclerView, newState);
+            isIdle = newState == RecyclerView.SCROLL_STATE_IDLE;
         }
     };
 
@@ -77,27 +96,39 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
         transaction.commit();
     }
 
+    private DelegateFilter mFilter = new DelegateFilter() {
+        @Override
+        public boolean accept(LayoutImpl impl) {
+            if (impl instanceof SongDelegate) {
+                SongDelegate songDelegate = (SongDelegate)impl;
+                return songDelegate.getSource().equals(PlayManager.getInstance(MainActivity.this).getCurrentSong());
+            }
+            return false;
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mMiniPanel = findViewById(R.id.main_mini_panel);
-        mMiniPanelBgIv = (ImageView)findViewById(R.id.main_mini_panel_bg);
-        mThumbIv = (ImageView)findViewById(R.id.main_mini_thumb);
-        mControlBtn = (ImageView)findViewById(R.id.main_mini_control_btn);
-        mNextBtn = (ImageView)findViewById(R.id.main_mini_control_next);
-        mTitleTv = (TextView)findViewById(R.id.main_mini_title);
-        mArtistAlbumTv = (TextView)findViewById(R.id.main_mini_artist_album);
+        mToolbarLayout = (CollapsingToolbarLayout)findViewById(R.id.main_toolbar_layout);
+        mToolbar = (Toolbar)findViewById(R.id.main_toolbar);
+        mThumbView = (ImageView)findViewById(R.id.main_current_thumb);
+        mCoverIv = (ImageView)findViewById(R.id.main_current_cover);
+        mFab = (FloatingActionButton)findViewById(R.id.main_fab);
 
         mRv = (RecyclerView)findViewById(R.id.main_rv);
         mRv.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new DelegateAdapter(this);
         mRv.setAdapter(mAdapter);
+        mRv.addOnScrollListener(mScrollListener);
 
-        mControlBtn.setOnClickListener(mClickListener);
-        mMiniPanel.setOnClickListener(mClickListener);
-        mNextBtn.setOnClickListener(mClickListener);
+        mFab.setOnClickListener(mClickListener);
+
+        mToolbarLayout.setExpandedTitleColor(Color.WHITE);
+        mToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
+
     }
 
     @Override
@@ -108,25 +139,36 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
         if (songs != null) {
             setupPlayList(songs);
         }
-
-        mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        mFab.setSelected(PlayManager.getInstance(this).isPlaying());
+        Song song = PlayManager.getInstance(this).getCurrentSong();
+
+        if (song != null) {
+            int index = mAdapter.firstIndexOf(mFilter);
+            mRv.getLayoutManager().scrollToPosition(index);
+            showSong(song);
+        }
         PlayManager.getInstance(this).registerCallback(this);
+        PlayManager.getInstance(this).registerProgressCallback(this);
+        isResumed = true;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         PlayManager.getInstance(this).unregisterCallback(this);
+        PlayManager.getInstance(this).unregisterProgressCallback(this);
+        isResumed = false;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mRv.removeOnScrollListener(mScrollListener);
     }
 
     @Override
@@ -149,28 +191,22 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
     public void onPlayStateChanged(@PlayService.State int state, Song song) {
         switch (state) {
             case PlayService.STATE_INITIALIZED:
-
-                mTitleTv.setText(song.getTitle());
-                mArtistAlbumTv.setText(song.getArtistAlbum());
-                File file = song.getCoverFile(this);
-                if (file.exists()) {
-                    Glide.with(this).load(file).placeholder(R.mipmap.ic_launcher).into(mThumbIv);
-                    Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in)
-                            .transform(new BlurTransformation(this)).into(mMiniPanelBgIv);
+                if (isIdle && isResumed) {
+                    mRv.scrollToPosition(mAdapter.firstIndexOf(mFilter));
                 }
-                animationShowMiniPanel();
+                showSong(song);
                 break;
             case PlayService.STATE_STARTED:
-                mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
+                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
             case PlayService.STATE_PAUSED:
-                mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
+                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
             case PlayService.STATE_STOPPED:
-                mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
+                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
             case PlayService.STATE_COMPLETED:
-                mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
+                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
         }
     }
@@ -180,32 +216,41 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
 
     }
 
-    private void animationShowMiniPanel() {
-        if (mMiniPanel.getVisibility() == View.VISIBLE) {
-            return;
+    private void showSong(Song song) {
+        mToolbarLayout.setTitle(song.getTitle());
+        mToolbar.setTitle(song.getTitle());
+        mToolbar.setSubtitle(song.getArtistAlbum());
+        File file = song.getCoverFile(this);
+        if (file.exists()) {
+            final int radius = (int)(getResources().getDisplayMetrics().density * 96);
+            Glide.with(this).load(file).asBitmap().transform(new RoundedCornersTransformation(this, radius, 0))
+                    .placeholder(R.mipmap.ic_launcher).into(new SimpleTarget<Bitmap>() {
+                @Override
+                public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                    mThumbView.setImageBitmap(resource);
+                    if (resource != null) {
+                        Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
+                            @Override
+                            public void onGenerated(Palette palette) {
+                                Palette.Swatch swatch = palette.getLightMutedSwatch();
+                                if (swatch != null) {
+                                    mToolbarLayout.setExpandedTitleColor(swatch.getTitleTextColor());
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+            Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in)
+                    .transform(new BlurTransformation(this)).into(mCoverIv);
+        } else {
+            mThumbView.setImageDrawable(null);
+            mCoverIv.setImageDrawable(null);
         }
-        ObjectAnimator animator = ObjectAnimator.ofFloat(mMiniPanel, "translationY", mMiniPanel.getHeight(), 0);
-        animator.addListener(new Animator.AnimatorListener() {
-            @Override
-            public void onAnimationStart(Animator animation) {
-                mMiniPanel.setVisibility(View.VISIBLE);
-            }
+    }
 
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                animation.removeAllListeners();
-            }
-
-            @Override
-            public void onAnimationCancel(Animator animation) {
-                animation.removeAllListeners();
-            }
-
-            @Override
-            public void onAnimationRepeat(Animator animation) {
-
-            }
-        });
-        animator.start();
+    @Override
+    public void onProgress(int progress, int duration) {
+        //Log.v(TAG, "onProgress progress=" + progress + " duration=" + duration);
     }
 }
