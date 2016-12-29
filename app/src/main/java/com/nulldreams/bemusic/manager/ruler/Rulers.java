@@ -30,9 +30,9 @@ public class Rulers {
         }
 
         @Override
-        public Song forward(Song song, List<Song> songList, boolean isUserAction) {
+        public Song next(Song song, List<Song> songList, boolean isUserAction) {
             if (isUserAction) {
-                return RULER_LIST_LOOP.forward(song, songList, isUserAction);
+                return RULER_LIST_LOOP.next(song, songList, isUserAction);
             }
             return song;
         }
@@ -67,7 +67,7 @@ public class Rulers {
         }
 
         @Override
-        public Song forward(Song song, List<Song> songList, boolean isUserAction) {
+        public Song next(Song song, List<Song> songList, boolean isUserAction) {
             if (songList != null && !songList.isEmpty()) {
                 if (song == null) {
                     return songList.get(0);
@@ -111,7 +111,7 @@ public class Rulers {
         }
 
         @Override
-        public Song forward(Song song, List<Song> songList, boolean isUserAction) {
+        public Song next(Song song, List<Song> songList, boolean isUserAction) {
             if (songList != null && songList.size() > 1) {
                 Song forwardSong;
                 if (!mSongStack.isEmpty()) {

@@ -1,8 +1,8 @@
 package com.nulldreams.bemusic.manager;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -17,16 +17,14 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v7.app.NotificationCompat;
+import android.util.Log;
+import android.widget.RemoteViews;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.resource.drawable.GlideDrawable;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.manager.ruler.Rulers;
 import com.nulldreams.bemusic.model.Song;
-import com.nulldreams.bemusic.receiver.NoisyBroadcastReceiver;
+import com.nulldreams.bemusic.receiver.SimpleBroadcastReceiver;
 import com.nulldreams.bemusic.service.PlayService;
 import com.nulldreams.bemusic.utils.MediaUtils;
 
@@ -43,6 +41,10 @@ import java.util.List;
 
 public class PlayManager implements PlayService.PlayStateChangeListener{
 
+    private static final String TAG = PlayManager.class.getSimpleName();
+
+    public static final String ACTION_NOTIFICATION_DELETE = "com.nulldreams.music.Action.ACTION_NOTIFICATION_DELETE";
+
     private static PlayManager sManager = null;
 
     public synchronized static PlayManager getInstance (Context context) {
@@ -57,16 +59,19 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((PlayService.PlayBinder)service).getService();
             mService.setPlayStateChangeListener(PlayManager.this);
+            Log.v(TAG, "onServiceConnected");
+            dispatch(mSong);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.v(TAG, "onServiceDisconnected " + name);
             mService.setPlayStateChangeListener(null);
             mService = null;
         }
     };
 
-    private NoisyBroadcastReceiver mNoisyReceiver = new NoisyBroadcastReceiver() {
+    private SimpleBroadcastReceiver mNoisyReceiver = new SimpleBroadcastReceiver() {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -76,6 +81,17 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
             }
         }
 
+    };
+
+    private SimpleBroadcastReceiver mNotifyDeleteReceiver = new SimpleBroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (ACTION_NOTIFICATION_DELETE.equals(intent.getAction())) {
+                release();
+                this.unregister(mContext);
+                Log.v(TAG, "mNotifyDeleteReceiver onReceive " + intent.getAction());
+            }
+        }
     };
 
     private AudioManager.OnAudioFocusChangeListener mAfListener = new AudioManager.OnAudioFocusChangeListener() {
@@ -143,18 +159,11 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
             @Override
             protected void onPostExecute(List<Song> songs) {
                 mTotalList = songs;
-                bindPlayService();
-                startPlayService();
+                /*bindPlayService();
+                startPlayService();*/
                 for (Callback callback : mCallbacks) {
                     callback.onPlayListPrepared(songs);
                 }
-                /*mAdapter.addAll(songs, new DelegateParser<Song>() {
-                    @Override
-                    public DelegateImpl parse(Song data) {
-                        return new SongDelegate(data);
-                    }
-                });
-                mAdapter.notifyDataSetChanged();*/
             }
         }.execute(mContext);
     }
@@ -167,7 +176,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         mContext.bindService(new Intent(mContext, PlayService.class), mConnection, Context.BIND_AUTO_CREATE);
     }
     private void unbindPlayService () {
-        mContext.unbindService(mConnection);
+        if (mService != null) {
+            mContext.unbindService(mConnection);
+        }
     }
     private void startPlayService () {
         mContext.startService(new Intent(mContext, PlayService.class));
@@ -181,19 +192,29 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
     }
 
     public void dispatch(final Song song) {
-
+        Log.v(TAG, "dispatch song=" + song);
         if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
+            Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
             if (mService != null) {
+                Log.v(TAG, "dispatch equals=" + (song.equals(mSong)));
                 if (song.equals(mSong)) {
                     if (mService.isStarted()) {
                         pause();
-                    } else {
+                    } else if (mService.isPaused()){
                         resume();
+                    } else {
+                        mSong = song;
+                        mService.startPlayer(song.getPath());
                     }
                 } else {
                     mSong = song;
                     mService.startPlayer(song.getPath());
                 }
+            } else {
+                Log.v(TAG, "dispatch mService == null");
+                mSong = song;
+                bindPlayService();
+                startPlayService();
             }
         }
 
@@ -206,12 +227,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         }
     }
 
-    public void forward () {
-        forward(true);
+    public void next() {
+        next(true);
     }
 
-    private void forward (boolean isUserAction) {
-        dispatch(mPlayRule.forward(mSong, mTotalList, isUserAction));
+    private void next(boolean isUserAction) {
+        dispatch(mPlayRule.next(mSong, mTotalList, isUserAction));
     }
 
     public void previous () {
@@ -228,6 +249,15 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
 
     public void pause () {
         mService.pausePlayer();
+    }
+
+    public void release () {
+        mService.releasePlayer();
+        unbindPlayService();
+        stopPlayService();
+
+        mService.setPlayStateChangeListener(null);
+        mService = null;
     }
 
     public boolean isPlaying () {
@@ -264,18 +294,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
 
     private void registerNoisyReceiver () {
         mNoisyReceiver.register(mContext, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
-        /*if (!mNoisyReceiver.isRegistered()) {
-            mContext.registerReceiver(mNoisyReceiver, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
-            mNoisyReceiver.setRegistered(true);
-        }*/
     }
 
     private void unregisterNoisyReceiver () {
         mNoisyReceiver.unregister(mContext);
-        /*if (mNoisyReceiver.isRegistered()) {
-            mContext.unregisterReceiver(mNoisyReceiver);
-            mNoisyReceiver.setRegistered(false);
-        }*/
     }
 
     @Override
@@ -284,23 +306,28 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         switch (state) {
             case PlayService.STATE_STARTED:
                 registerNoisyReceiver();
+                notification(state);
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
+                notification(state);
                 break;
             case PlayService.STATE_ERROR:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
+                notification(state);
                 break;
             case PlayService.STATE_STOPPED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
+                notification(state);
                 break;
             case PlayService.STATE_COMPLETED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
-                forward(false);
+                notification(state);
+                next(false);
                 break;
             case PlayService.STATE_RELEASED:
                 unregisterNoisyReceiver();
@@ -310,30 +337,59 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
         for (Callback callback : mCallbacks) {
             callback.onPlayStateChanged(state, mSong);
         }
-        notification(state);
     }
-
+    private int mLastNotificationId;
     private void notification (@PlayService.State int state) {
+        NotificationManager manager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (mLastNotificationId > 0) {
+            mService.stopForeground(true);
+            manager.cancel(mLastNotificationId);
+        }
+
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
-        builder.addAction(new android.support.v4.app.NotificationCompat.Action(R.drawable.ic_play_pause_sel, "play", PendingIntent.getBroadcast(
-                mContext, 100, new Intent("play_pause"), PendingIntent.FLAG_ONE_SHOT
-        )));
         builder.setContentTitle(mSong.getTitle());
-        builder.setContentText(mSong.getArtist() + " - " + mSong.getAlbum());
+        builder.setContentText(mSong.getArtistAlbum());
         builder.setWhen(System.currentTimeMillis());
         builder.setSmallIcon(R.mipmap.ic_launcher);
+
+        File file = mSong.getCoverFile(mContext);
+        Bitmap bmp = null;
+        if (file.exists()) {
+            bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
+            builder.setLargeIcon(bmp);
+        } else {
+            builder.setLargeIcon(null);
+        }
+
+        RemoteViews remoteViews = new RemoteViews(mContext.getPackageName(), R.layout.layout_notification);
+        remoteViews.setTextViewText(R.id.notification_title, mSong.getTitle());
+        remoteViews.setTextViewText(R.id.notification_artist_album, mSong.getArtistAlbum());
+        remoteViews.setImageViewBitmap(R.id.notification_thumb, bmp);
+        builder.setCustomBigContentView(remoteViews);
+
         boolean onGoing = isPlaying();
+
         builder.setOngoing(onGoing);
         builder.setAutoCancel(!onGoing);
+        PendingIntent deleteIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_NOTIFICATION_DELETE), 0);
+        builder.setDeleteIntent(deleteIntent);
         final Notification notification = builder.build();
-        Glide.with(mContext).load(mSong.getCoverFile(mContext)).asBitmap().into(new SimpleTarget<Bitmap>() {
-            @Override
-            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                builder.setLargeIcon(resource);
-                mService.startForeground(1, notification);
-            }
-        });
 
+        int notificationId = mSong.getId();
+        Log.v(TAG, "notification onGoing=" + onGoing + " notificationId=" + notificationId);
+        if (onGoing) {
+            mService.startForeground(notificationId, notification);
+            mNotifyDeleteReceiver.unregister(mContext);
+        } else {
+            mService.stopForeground(true);
+            manager.notify(notificationId, notification);
+            mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
+        }
+        mLastNotificationId = notificationId;
+        if (bmp != null) {
+            bmp.recycle();
+        }
     }
 
     public interface Callback {

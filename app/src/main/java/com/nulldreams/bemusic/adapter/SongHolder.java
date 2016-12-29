@@ -36,7 +36,7 @@ public class SongHolder extends AbsViewHolder<SongDelegate> {
     public void onBindView(final Context context, SongDelegate songDelegate, int position, DelegateAdapter adapter) {
         final Song song = songDelegate.getSource();
         titleTv.setText(song.getTitle());
-        artistAlbumTv.setText(song.getArtist() + " - " + song.getAlbum());
+        artistAlbumTv.setText(song.getArtistAlbum());
         File file = song.getCoverFile(context);
         if (file.exists()) {
             Glide.with(context).load(file).placeholder(R.mipmap.ic_launcher).into(thumbIv);

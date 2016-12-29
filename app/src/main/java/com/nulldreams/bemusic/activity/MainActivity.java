@@ -2,7 +2,6 @@ package com.nulldreams.bemusic.activity;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
-import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -43,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
     private DelegateAdapter mAdapter;
     private RecyclerView mRv;
     private View mMiniPanel;
-    private ImageView mMiniPanelBgIv, mThumbIv, mControlBtn;
+    private ImageView mMiniPanelBgIv, mThumbIv, mControlBtn, mNextBtn;
     private TextView mTitleTv, mArtistAlbumTv;
 
     PlayDetailFragment fragment = PlayDetailFragment.newInstance();
@@ -56,6 +55,8 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
                 PlayManager.getInstance(v.getContext()).dispatch();
             } else if (id == mMiniPanel.getId()) {
                 showPlayDetail();
+            } else if (id == mNextBtn.getId()) {
+                PlayManager.getInstance(v.getContext()).next();
             }
         }
     };
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
         mMiniPanelBgIv = (ImageView)findViewById(R.id.main_mini_panel_bg);
         mThumbIv = (ImageView)findViewById(R.id.main_mini_thumb);
         mControlBtn = (ImageView)findViewById(R.id.main_mini_control_btn);
+        mNextBtn = (ImageView)findViewById(R.id.main_mini_control_next);
         mTitleTv = (TextView)findViewById(R.id.main_mini_title);
         mArtistAlbumTv = (TextView)findViewById(R.id.main_mini_artist_album);
 
@@ -95,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
 
         mControlBtn.setOnClickListener(mClickListener);
         mMiniPanel.setOnClickListener(mClickListener);
+        mNextBtn.setOnClickListener(mClickListener);
     }
 
     @Override
@@ -148,14 +151,14 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
             case PlayService.STATE_INITIALIZED:
 
                 mTitleTv.setText(song.getTitle());
-                mArtistAlbumTv.setText(song.getArtist() + " - " + song.getAlbum());
+                mArtistAlbumTv.setText(song.getArtistAlbum());
                 File file = song.getCoverFile(this);
                 if (file.exists()) {
                     Glide.with(this).load(file).placeholder(R.mipmap.ic_launcher).into(mThumbIv);
                     Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in)
                             .transform(new BlurTransformation(this)).into(mMiniPanelBgIv);
                 }
-                annimtionShowMiniPanel();
+                animationShowMiniPanel();
                 break;
             case PlayService.STATE_STARTED:
                 mControlBtn.setSelected(PlayManager.getInstance(this).isPlaying());
@@ -177,7 +180,10 @@ public class MainActivity extends AppCompatActivity implements PlayManager.Callb
 
     }
 
-    private void annimtionShowMiniPanel () {
+    private void animationShowMiniPanel() {
+        if (mMiniPanel.getVisibility() == View.VISIBLE) {
+            return;
+        }
         ObjectAnimator animator = ObjectAnimator.ofFloat(mMiniPanel, "translationY", mMiniPanel.getHeight(), 0);
         animator.addListener(new Animator.AnimatorListener() {
             @Override

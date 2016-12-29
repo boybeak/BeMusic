@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/notification_thumb"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
+        android:src="@mipmap/ic_launcher"
+        android:layout_margin="16dp"
+        />
+    <TextView
+        android:id="@+id/notification_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/notification_thumb"
+        android:layout_alignTop="@+id/notification_thumb"
+        android:textAppearance="@style/TextAppearance.AppCompat.Title"
+        />
+    <TextView
+        android:id="@+id/notification_artist_album"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/notification_thumb"
+        android:layout_below="@+id/notification_title"
+        android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        />
+</RelativeLayout>

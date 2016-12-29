@@ -10,6 +10,6 @@ import java.util.List;
 
 public interface Rule {
     Song previous (Song song, List<Song> songList, boolean isUserAction);
-    Song forward (Song song, List<Song> songList, boolean isUserAction);
+    Song next(Song song, List<Song> songList, boolean isUserAction);
     void clear ();
 }

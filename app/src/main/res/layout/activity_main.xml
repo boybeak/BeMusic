@@ -31,7 +31,7 @@
             android:layout_marginRight="16dp"
             />
         <ImageView
-            android:id="@+id/main_mini_control_btn"
+            android:id="@+id/main_mini_control_next"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:scaleType="centerCrop"
@@ -39,6 +39,16 @@
             android:layout_alignParentRight="true"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
+            app:srcCompat="@drawable/ic_skip_next"
+            />
+        <ImageView
+            android:id="@+id/main_mini_control_btn"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:scaleType="centerCrop"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/main_mini_control_next"
+            android:layout_marginLeft="16dp"
             app:srcCompat="@drawable/ic_play_pause_sel"
             />
         <LinearLayout

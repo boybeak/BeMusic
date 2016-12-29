@@ -44,6 +44,10 @@ public class Song {
         isNotification = bundle.getInt(MediaStore.Audio.Media.IS_NOTIFICATION) == 1;
     }
 
+    public int getId() {
+        return id;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -109,5 +113,9 @@ public class Song {
             mCoverFile = new File(context.getExternalCacheDir(), "covers" + File.separator + getTitle() + "_" + getArtist() + "_" + getAlbum() + ".jpg");
         }
         return mCoverFile;
+    }
+
+    public String getArtistAlbum () {
+        return getArtist() + " - " + getAlbum();
     }
 }

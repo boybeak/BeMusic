@@ -9,7 +9,7 @@ import android.support.v4.content.LocalBroadcastManager;
  * Created by gaoyunfei on 2016/12/28.
  */
 
-public abstract class NoisyBroadcastReceiver extends BroadcastReceiver {
+public abstract class SimpleBroadcastReceiver extends BroadcastReceiver {
 
     private boolean isRegistered = false, isLocalRegistered = false;
 
