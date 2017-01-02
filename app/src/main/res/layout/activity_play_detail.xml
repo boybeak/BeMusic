@@ -77,10 +77,12 @@
             android:layout_below="@+id/play_detail_seek_bar"
             android:gravity="center">
             <ImageView
+                android:id="@+id/play_detail_rule_change"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/ic_play_pause_sel"
+                android:padding="8dp"
+                app:srcCompat="@drawable/ic_repeat"
                 />
             <ImageView
                 android:id="@+id/play_detail_previous"
@@ -104,10 +106,12 @@
                 app:srcCompat="@drawable/ic_skip_next"
                 />
             <ImageView
+                android:id="@+id/play_detail_play_list"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/ic_play_pause_sel"
+                android:padding="8dp"
+                app:srcCompat="@drawable/ic_queue_music"
                 />
         </LinearLayout>
     </RelativeLayout>

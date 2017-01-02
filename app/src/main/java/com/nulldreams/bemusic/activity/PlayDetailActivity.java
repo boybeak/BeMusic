@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.manager.PlayManager;
 import com.nulldreams.bemusic.manager.ruler.Rule;
+import com.nulldreams.bemusic.manager.ruler.Rulers;
 import com.nulldreams.bemusic.model.Song;
 import com.nulldreams.bemusic.service.PlayService;
 
@@ -24,7 +25,7 @@ import java.util.List;
 public class PlayDetailActivity extends AppCompatActivity implements PlayManager.Callback, PlayManager.ProgressCallback {
 
     private TextView mTitleTv, mArtistTv, mAlbumTv;
-    private ImageView mThumbIv, mPlayPauseIv, mPreviousIv, mNextIv;
+    private ImageView mThumbIv, mPlayPauseIv, mPreviousIv, mNextIv, mRuleIv, mPlayListIv;
     private SeekBar mSeekBar;
     private Toolbar mToolbar;
 
@@ -38,6 +39,18 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                 PlayManager.getInstance(v.getContext()).previous();
             } else if (id == mNextIv.getId()) {
                 PlayManager.getInstance(v.getContext()).next();
+            } else if (id == mRuleIv.getId()) {
+                PlayManager manager = PlayManager.getInstance(v.getContext());
+                Rule rule = manager.getRule();
+                if (rule == Rulers.RULER_LIST_LOOP) {
+                    manager.setRule(Rulers.RULER_SINGLE_LOOP);
+                } else if (rule == Rulers.RULER_SINGLE_LOOP) {
+                    manager.setRule(Rulers.RULER_RANDOM);
+                } else if (rule == Rulers.RULER_RANDOM) {
+                    manager.setRule(Rulers.RULER_LIST_LOOP);
+                }
+            } else if (id == mPlayListIv.getId()) {
+
             }
         }
     };
@@ -67,6 +80,8 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mPlayPauseIv = (ImageView)findViewById(R.id.play_detail_play_pause);
         mPreviousIv = (ImageView)findViewById(R.id.play_detail_previous);
         mNextIv = (ImageView)findViewById(R.id.play_detail_next);
+        mRuleIv = (ImageView)findViewById(R.id.play_detail_rule_change);
+        mPlayListIv = (ImageView)findViewById(R.id.play_detail_play_list);
 
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -76,9 +91,13 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mPlayPauseIv.setOnClickListener(mClickListener);
         mPreviousIv.setOnClickListener(mClickListener);
         mNextIv.setOnClickListener(mClickListener);
+        mRuleIv.setOnClickListener(mClickListener);
+        mPlayListIv.setOnClickListener(mClickListener);
 
         Song song = PlayManager.getInstance(this).getCurrentSong();
         if (song != null) {
+            mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
+            onPlayRuleChanged(PlayManager.getInstance(this).getRule());
             showSong(song);
         }
     }
@@ -140,7 +159,13 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
 
     @Override
     public void onPlayRuleChanged(Rule rule) {
-
+        if (rule == Rulers.RULER_LIST_LOOP) {
+            mRuleIv.setImageResource(R.drawable.ic_repeat);
+        } else if (rule == Rulers.RULER_SINGLE_LOOP) {
+            mRuleIv.setImageResource(R.drawable.ic_repeat_once);
+        } else if (rule == Rulers.RULER_RANDOM) {
+            mRuleIv.setImageResource(R.drawable.ic_shuffle);
+        }
     }
 
     @Override

@@ -80,7 +80,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         public void onReceive(Context context, Intent intent) {
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
                 // Pause the playback
-                pause();
+                pause(false);
             }
         }
 
@@ -101,8 +101,15 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         @Override
         public void onAudioFocusChange(int focusChange) {
             Log.v(TAG, "onAudioFocusChange = " + focusChange);
-            if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
-                pause();
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
+                focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                if (isPlaying()) {
+                    pause(false);
+                }
+            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+                if (isPaused() && !isPausedByUser()) {
+                    resume();
+                }
             }
         }
     };
@@ -137,6 +144,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     private PlayService mService;
 
     private Rule mPlayRule = Rulers.RULER_LIST_LOOP;
+
+    private boolean isPausedByUser = false;
 
     private PlayManager (Context context) {
         mContext = context;
@@ -221,14 +230,15 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     public void dispatch(final Song song) {
         Log.v(TAG, "dispatch song=" + song);
-        if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
-            Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
-            if (mService != null) {
+        Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
+        if (mService != null) {
+            if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
                 if (song == null && mSong == null) {
                     Song defaultSong = mPlayRule.next(song, mTotalList, false);
                     dispatch(defaultSong);
                 } else if (song.equals(mSong)) {
                     if (mService.isStarted()) {
+                        //Do really this action by user
                         pause();
                     } else if (mService.isPaused()){
                         resume();
@@ -240,12 +250,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                     mSong = song;
                     mService.startPlayer(song.getPath());
                 }
-            } else {
-                Log.v(TAG, "dispatch mService == null");
-                mSong = song;
-                bindPlayService();
-                startPlayService();
             }
+        } else {
+            Log.v(TAG, "dispatch mService == null");
+            mSong = song;
+            bindPlayService();
+            startPlayService();
         }
 
     }
@@ -255,6 +265,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         for (Callback callback : mCallbacks) {
             callback.onPlayRuleChanged(mPlayRule);
         }
+    }
+
+    public Rule getRule () {
+        return mPlayRule;
     }
 
     public void next() {
@@ -280,7 +294,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     }
 
     public void pause () {
+        pause(true);
+    }
+
+    private void pause (boolean isPausedByUser) {
         mService.pausePlayer();
+        this.isPausedByUser = isPausedByUser;
     }
 
     public void release () {
@@ -294,6 +313,14 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     public boolean isPlaying () {
         return mService != null && mService.isStarted();
+    }
+
+    public boolean isPaused () {
+        return  mService != null && mService.isPaused();
+    }
+
+    public boolean isPausedByUser () {
+        return isPausedByUser;
     }
 
     public Song getCurrentSong () {
@@ -338,12 +365,14 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     private int requestAudioFocus () {
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        Log.v(TAG, "requestAudioFocus");
         return audioManager.requestAudioFocus(
                 mAfListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
     }
 
     private int releaseAudioFocus () {
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        Log.v(TAG, "releaseAudioFocus");
         return audioManager.abandonAudioFocus(mAfListener);
     }
 
@@ -392,35 +421,52 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     public void onStateChanged(@PlayService.State int state) {
 
         switch (state) {
+            case PlayService.STATE_IDLE:
+                isPausedByUser = false;
+                break;
+            case PlayService.STATE_INITIALIZED:
+                isPausedByUser = false;
+                break;
+            case PlayService.STATE_PREPARING:
+                isPausedByUser = false;
+                break;
+            case PlayService.STATE_PREPARED:
+                isPausedByUser = false;
+                break;
             case PlayService.STATE_STARTED:
                 registerNoisyReceiver();
                 notification(state);
                 startUpdateProgressIfNeed();
+                isPausedByUser = false;
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
-                releaseAudioFocus();
+                //releaseAudioFocus();
                 notification(state);
                 break;
             case PlayService.STATE_ERROR:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
                 notification(state);
+                isPausedByUser = false;
                 break;
             case PlayService.STATE_STOPPED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
                 notification(state);
+                isPausedByUser = false;
                 break;
             case PlayService.STATE_COMPLETED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
                 notification(state);
+                isPausedByUser = false;
                 next(false);
                 break;
             case PlayService.STATE_RELEASED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
+                isPausedByUser = false;
                 break;
         }
         for (Callback callback : mCallbacks) {
