@@ -3,7 +3,7 @@
     package="com.nulldreams.bemusic">
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL"/>
+    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
 
     <application
         android:allowBackup="true"
@@ -24,6 +24,10 @@
             android:enabled="true"
             android:exported="true" />
 
+        <activity
+            android:name=".activity.PlayDetailActivity"
+            android:theme="@style/PlayDetailTheme"
+            />
     </application>
 
 </manifest>

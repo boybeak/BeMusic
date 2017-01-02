@@ -3,5 +3,6 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="AbsTheme">
         <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowContentTransitions">true</item>
     </style>
 </resources>

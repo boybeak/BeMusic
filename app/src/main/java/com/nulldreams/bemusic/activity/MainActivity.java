@@ -1,46 +1,37 @@
 package com.nulldreams.bemusic.activity;
 
+import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Color;
 import android.os.Build;
 import android.support.annotation.Nullable;
-import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.nulldreams.adapter.DelegateAdapter;
-import com.nulldreams.adapter.DelegateFilter;
-import com.nulldreams.adapter.DelegateParser;
-import com.nulldreams.adapter.impl.DelegateImpl;
-import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
-import com.nulldreams.bemusic.adapter.SongDelegate;
-import com.nulldreams.bemusic.fragment.PlayDetailFragment;
 import com.nulldreams.bemusic.fragment.RvFragment;
 import com.nulldreams.bemusic.fragment.SongListFragment;
 import com.nulldreams.bemusic.manager.PlayManager;
 import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.model.Song;
 import com.nulldreams.bemusic.service.PlayService;
+import com.nulldreams.bemusic.widget.ProgressBar;
 
 import java.io.File;
 import java.util.List;
@@ -62,6 +53,7 @@ public class MainActivity extends AppCompatActivity
     private View mMiniPanel;
     private ImageView mMiniThumbIv, mPlayPauseIv, mPreviousIv, mNextIv;
     private TextView mMiniTitleTv, mMiniArtistAlbumTv;
+    private ProgressBar mMiniPb;
 
     private int mLength = 1;
     private RvFragment[] mFragmentArray = null;
@@ -81,13 +73,16 @@ public class MainActivity extends AppCompatActivity
             }
         }
     };
-    private PlayDetailFragment mDetailFragment = PlayDetailFragment.newInstance();
+//    private PlayDetailFragment mDetailFragment = PlayDetailFragment.newInstance();
     private void showPlayDetail () {
-        FragmentManager manager = getSupportFragmentManager();
+        Intent it = new Intent(this, PlayDetailActivity.class);
+        startActivity(it);
+        overridePendingTransition(R.anim.anim_bottom_in, 0);
+        /*FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
         transaction.add(R.id.main_content, mDetailFragment);
         transaction.addToBackStack(null);
-        transaction.commit();
+        transaction.commit();*/
     }
 
     private boolean isResumed;
@@ -96,6 +91,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -117,17 +116,16 @@ public class MainActivity extends AppCompatActivity
         mPreviousIv = (ImageView)findViewById(R.id.main_mini_action_previouse);
         mNextIv = (ImageView)findViewById(R.id.main_mini_action_next);
 
+        mMiniPb = (ProgressBar)findViewById(R.id.main_mini_progress_bar);
+
         mVp.setAdapter(new VpAdapter(getSupportFragmentManager()));
         mTl.setupWithViewPager(mVp);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            /*getWindow().getDecorView().setSystemUiVisibility(
+            getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-            );*/
-            getWindow().getDecorView().setFitsSystemWindows(true);
-            mDrawerLayout.setFitsSystemWindows(true);
-            getWindow().addFlags(
-                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+            );
         }
 
         setSupportActionBar(mTb);
@@ -227,6 +225,10 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onProgress(int progress, int duration) {
+        if (mMiniPb.getMax() != duration) {
+            mMiniPb.setMax(duration);
+        }
+        mMiniPb.setProgress(progress);
         //mProgressDurationTv.setText(MediaUtils.formatTime(progress) + "/" + MediaUtils.formatTime(duration));
         //mProgressBar.setProgress(progress);
         //Log.v(TAG, "onProgress progress=" + progress + " duration=" + duration);

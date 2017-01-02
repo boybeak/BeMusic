@@ -20,6 +20,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+        android:textColor="@android:color/darker_gray"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:maxLines="1"
@@ -40,12 +41,14 @@
             android:maxLines="1"
             android:textAppearance="@style/Base.TextAppearance.AppCompat.Title"
             android:ellipsize="end"
+            android:textColor="@android:color/white"
             />
         <TextView
             android:id="@+id/song_artist_album"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            android:textColor="@android:color/darker_gray"
             android:ellipsize="end"
             android:maxLines="1"
             />

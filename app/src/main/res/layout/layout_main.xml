@@ -19,7 +19,6 @@
             android:layout_width="?attr/actionBarSize"
             android:layout_height="?attr/actionBarSize"
             android:layout_centerVertical="true"
-            android:layout_marginRight="16dp"
             android:scaleType="centerCrop"
             />
         <LinearLayout
@@ -60,6 +59,7 @@
             android:layout_toRightOf="@+id/main_mini_thumb"
             android:layout_toLeftOf="@+id/main_mini_action"
             android:layout_centerVertical="true"
+            android:layout_marginLeft="16dp"
             >
             <TextView
                 android:id="@+id/main_mini_title"
@@ -76,9 +76,17 @@
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textColor="@android:color/darker_gray"
                 />
         </LinearLayout>
-
+        <com.nulldreams.bemusic.widget.ProgressBar
+            android:id="@+id/main_mini_progress_bar"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_toRightOf="@+id/main_mini_thumb"
+            android:layout_alignTop="@+id/main_mini_thumb"
+            app:progressColor="?attr/colorAccent"
+            />
     </RelativeLayout>
     <android.support.design.widget.CoordinatorLayout
         android:id="@+id/main_coordinator_layout"

@@ -42,7 +42,7 @@ import java.util.List;
  * Created by boybe on 2016/12/27.
  */
 
-public class PlayManager implements PlayService.PlayStateChangeListener{
+public class PlayManager implements PlayService.PlayStateChangeListener {
 
     private static final String TAG = PlayManager.class.getSimpleName();
 
@@ -100,6 +100,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
     private AudioManager.OnAudioFocusChangeListener mAfListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
         public void onAudioFocusChange(int focusChange) {
+            Log.v(TAG, "onAudioFocusChange = " + focusChange);
             if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
                 pause();
             }
@@ -273,7 +274,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
     }
 
     public void resume () {
-        mService.resumePlayer();
+        if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
+            mService.resumePlayer();
+        }
     }
 
     public void pause () {
