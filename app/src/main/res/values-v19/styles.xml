@@ -9,5 +9,6 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowBackground">?attr/colorPrimary</item>
+        <item name="android:windowTranslucentStatus">true</item>
     </style>
 </resources>

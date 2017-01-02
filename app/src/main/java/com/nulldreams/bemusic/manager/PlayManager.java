@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
+import android.media.RemoteControlClient;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -25,6 +26,7 @@ import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.manager.ruler.Rulers;
 import com.nulldreams.bemusic.model.Song;
+import com.nulldreams.bemusic.receiver.LockControlReceiver;
 import com.nulldreams.bemusic.receiver.SimpleBroadcastReceiver;
 import com.nulldreams.bemusic.service.PlayService;
 import com.nulldreams.bemusic.utils.MediaUtils;
@@ -293,6 +295,42 @@ public class PlayManager implements PlayService.PlayStateChangeListener{
 
     public Song getCurrentSong () {
         return mSong;
+    }
+
+    private ComponentName mEventReceiver = null;
+    private RemoteControlClient mRemoteControlClient = null;
+
+    public void lockScreenControls () {
+        if (mService != null && (mService.isStarted() || mService.isPaused())) {
+            mEventReceiver = new ComponentName(mContext, LockControlReceiver.class);
+            AudioManager audioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
+            audioManager.registerMediaButtonEventReceiver(mEventReceiver);
+            Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+            mediaButtonIntent.setComponent(mEventReceiver);
+            PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(mContext.getApplicationContext(),
+                    0, mediaButtonIntent, 0);
+
+            mRemoteControlClient = new RemoteControlClient(mediaPendingIntent);
+
+            mRemoteControlClient.editMetadata(true)
+                    .putString(MediaMetadataRetriever.METADATA_KEY_TITLE, mSong.getTitle())
+                    .putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, mSong.getArtist())
+                    .putString(MediaMetadataRetriever.METADATA_KEY_ALBUM, mSong.getAlbum())
+                    ;
+            audioManager.registerRemoteControlClient(mRemoteControlClient);
+        }
+    }
+
+    public void unlockScreenControls () {
+        AudioManager audioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
+        if (mEventReceiver != null) {
+            audioManager.unregisterMediaButtonEventReceiver(mEventReceiver);
+            mEventReceiver = null;
+        }
+        if (mRemoteControlClient != null) {
+            audioManager.unregisterRemoteControlClient(mRemoteControlClient);
+            mRemoteControlClient = null;
+        }
     }
 
     private int requestAudioFocus () {

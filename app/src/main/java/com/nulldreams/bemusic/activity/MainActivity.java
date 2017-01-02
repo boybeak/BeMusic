@@ -1,25 +1,32 @@
 package com.nulldreams.bemusic.activity;
 
-import android.graphics.Bitmap;
+import android.content.res.Configuration;
 import android.graphics.Color;
+import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
-import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
-import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.GlideAnimation;
-import com.bumptech.glide.request.target.SimpleTarget;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateFilter;
 import com.nulldreams.adapter.DelegateParser;
@@ -28,6 +35,8 @@ import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.bemusic.fragment.PlayDetailFragment;
+import com.nulldreams.bemusic.fragment.RvFragment;
+import com.nulldreams.bemusic.fragment.SongListFragment;
 import com.nulldreams.bemusic.manager.PlayManager;
 import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.model.Song;
@@ -35,10 +44,6 @@ import com.nulldreams.bemusic.service.PlayService;
 
 import java.io.File;
 import java.util.List;
-
-import jp.wasabeef.glide.transformations.BlurTransformation;
-import jp.wasabeef.glide.transformations.CropCircleTransformation;
-import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
 
 public class MainActivity extends AppCompatActivity
         implements PlayManager.Callback, PlayManager.ProgressCallback{
@@ -49,111 +54,118 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private DelegateAdapter mAdapter;
-    private RecyclerView mRv;
-    private CollapsingToolbarLayout mToolbarLayout;
-    private Toolbar mToolbar;
-    private ImageView mCoverIv, mThumbView;
-    private FloatingActionButton mFab;
+    private DrawerLayout mDrawerLayout;
+    private CoordinatorLayout mCoorLayout;
+    private Toolbar mTb;
+    private ViewPager mVp;
+    private TabLayout mTl;
+    private View mMiniPanel;
+    private ImageView mMiniThumbIv, mPlayPauseIv, mPreviousIv, mNextIv;
+    private TextView mMiniTitleTv, mMiniArtistAlbumTv;
 
-    PlayDetailFragment fragment = PlayDetailFragment.newInstance();
+    private int mLength = 1;
+    private RvFragment[] mFragmentArray = null;
 
     private View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             final int id = v.getId();
-            if (id == mFab.getId()) {
+            if (id == mPlayPauseIv.getId()) {
                 PlayManager.getInstance(v.getContext()).dispatch();
-            }/* else if (id == mMiniPanel.getId()) {
+            } else if (id == mMiniPanel.getId()) {
                 showPlayDetail();
-            } else if (id == mNextBtn.getId()) {
+            } else if (id == mPreviousIv.getId()) {
+                PlayManager.getInstance(v.getContext()).previous();
+            } else if (id == mNextIv.getId()) {
                 PlayManager.getInstance(v.getContext()).next();
-            }*/
+            }
         }
     };
-    private boolean isIdle = true, isResumed = false;
-    private RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
-        @Override
-        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            super.onScrollStateChanged(recyclerView, newState);
-            isIdle = newState == RecyclerView.SCROLL_STATE_IDLE;
-        }
-    };
-
+    private PlayDetailFragment mDetailFragment = PlayDetailFragment.newInstance();
     private void showPlayDetail () {
         FragmentManager manager = getSupportFragmentManager();
         FragmentTransaction transaction = manager.beginTransaction();
-        transaction.add(R.id.activity_main, fragment);
+        transaction.add(R.id.main_content, mDetailFragment);
         transaction.addToBackStack(null);
         transaction.commit();
     }
 
-    private void hidePlayDetail () {
-        FragmentManager manager = getSupportFragmentManager();
-        FragmentTransaction transaction = manager.beginTransaction();
-        transaction.remove(fragment);
-        manager.popBackStack();
-        transaction.commit();
-    }
+    private boolean isResumed;
 
-    private DelegateFilter mFilter = new DelegateFilter() {
-        @Override
-        public boolean accept(LayoutImpl impl) {
-            if (impl instanceof SongDelegate) {
-                SongDelegate songDelegate = (SongDelegate)impl;
-                return songDelegate.getSource().equals(PlayManager.getInstance(MainActivity.this).getCurrentSong());
-            }
-            return false;
-        }
-    };
+    private ActionBarDrawerToggle mDrawerToggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mToolbarLayout = (CollapsingToolbarLayout)findViewById(R.id.main_toolbar_layout);
-        mToolbar = (Toolbar)findViewById(R.id.main_toolbar);
-        mThumbView = (ImageView)findViewById(R.id.main_current_thumb);
-        mCoverIv = (ImageView)findViewById(R.id.main_current_cover);
-        mFab = (FloatingActionButton)findViewById(R.id.main_fab);
+        mFragmentArray = new RvFragment[mLength];
+        mFragmentArray[0] = new SongListFragment();
 
-        mRv = (RecyclerView)findViewById(R.id.main_rv);
-        mRv.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new DelegateAdapter(this);
-        mRv.setAdapter(mAdapter);
-        mRv.addOnScrollListener(mScrollListener);
+        mDrawerLayout = (DrawerLayout)findViewById(R.id.main_drawer);
+        mCoorLayout = (CoordinatorLayout)findViewById(R.id.main_coordinator_layout);
+        mTb = (Toolbar)findViewById(R.id.main_tool_bar);
+        mVp = (ViewPager)findViewById(R.id.main_view_pager);
+        mTl = (TabLayout)findViewById(R.id.main_tab_layout);
 
-        mFab.setOnClickListener(mClickListener);
+        mMiniPanel = findViewById(R.id.main_mini_panel);
+        mMiniThumbIv = (ImageView)findViewById(R.id.main_mini_thumb);
+        mMiniTitleTv = (TextView)findViewById(R.id.main_mini_title);
+        mMiniArtistAlbumTv = (TextView)findViewById(R.id.main_mini_artist_album);
 
-        mToolbarLayout.setExpandedTitleColor(Color.WHITE);
-        mToolbarLayout.setCollapsedTitleTextColor(Color.WHITE);
+        mPlayPauseIv = (ImageView)findViewById(R.id.main_mini_action_play_pause);
+        mPreviousIv = (ImageView)findViewById(R.id.main_mini_action_previouse);
+        mNextIv = (ImageView)findViewById(R.id.main_mini_action_next);
+
+        mVp.setAdapter(new VpAdapter(getSupportFragmentManager()));
+        mTl.setupWithViewPager(mVp);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            /*getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+            );*/
+            getWindow().getDecorView().setFitsSystemWindows(true);
+            mDrawerLayout.setFitsSystemWindows(true);
+            getWindow().addFlags(
+                    WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        }
+
+        setSupportActionBar(mTb);
+
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mTb, R.string.app_name, R.string.title_song_list);
+
+        mMiniPanel.setOnClickListener(mClickListener);
+        mPlayPauseIv.setOnClickListener(mClickListener);
+        mPreviousIv.setOnClickListener(mClickListener);
+        mNextIv.setOnClickListener(mClickListener);
 
     }
 
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        mDrawerToggle.syncState();
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+    }
 
-        List<Song> songs = PlayManager.getInstance(this).getTotalList();
-        if (songs != null) {
-            setupPlayList(songs);
-        }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        mFab.setSelected(PlayManager.getInstance(this).isPlaying());
+        mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
         Song song = PlayManager.getInstance(this).getCurrentSong();
-
         if (song != null) {
-            int index = mAdapter.firstIndexOf(mFilter);
-            mRv.getLayoutManager().scrollToPosition(index);
             showSong(song);
         }
+
         PlayManager.getInstance(this).registerCallback(this);
         PlayManager.getInstance(this).registerProgressCallback(this);
+        PlayManager.getInstance(this).unlockScreenControls();
         isResumed = true;
     }
 
@@ -162,51 +174,37 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
         PlayManager.getInstance(this).unregisterCallback(this);
         PlayManager.getInstance(this).unregisterProgressCallback(this);
+        PlayManager.getInstance(this).lockScreenControls();
         isResumed = false;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mRv.removeOnScrollListener(mScrollListener);
+        mDrawerLayout.removeDrawerListener(mDrawerToggle);
     }
 
     @Override
     public void onPlayListPrepared(List<Song> songs) {
-        setupPlayList(songs);
-    }
-
-    private void setupPlayList (List<Song> songs) {
-        mAdapter.clear();
-        mAdapter.addAll(songs, new DelegateParser<Song>() {
-            @Override
-            public DelegateImpl parse(Song data) {
-                return new SongDelegate(data);
-            }
-        });
-        mAdapter.notifyDataSetChanged();
     }
 
     @Override
     public void onPlayStateChanged(@PlayService.State int state, Song song) {
         switch (state) {
             case PlayService.STATE_INITIALIZED:
-                if (isIdle && isResumed) {
-                    mRv.scrollToPosition(mAdapter.firstIndexOf(mFilter));
-                }
                 showSong(song);
                 break;
             case PlayService.STATE_STARTED:
-                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
+                mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
             case PlayService.STATE_PAUSED:
-                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
+                mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
             case PlayService.STATE_STOPPED:
-                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
+                mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
             case PlayService.STATE_COMPLETED:
-                mFab.setSelected(PlayManager.getInstance(this).isPlaying());
+                mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
                 break;
         }
     }
@@ -217,40 +215,56 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showSong(Song song) {
-        mToolbarLayout.setTitle(song.getTitle());
-        mToolbar.setTitle(song.getTitle());
-        mToolbar.setSubtitle(song.getArtistAlbum());
+        mMiniTitleTv.setText(song.getTitle());
+        mMiniArtistAlbumTv.setText(song.getArtistAlbum());
         File file = song.getCoverFile(this);
         if (file.exists()) {
-            final int radius = (int)(getResources().getDisplayMetrics().density * 96);
-            Glide.with(this).load(file).asBitmap().transform(new RoundedCornersTransformation(this, radius, 0))
-                    .placeholder(R.mipmap.ic_launcher).into(new SimpleTarget<Bitmap>() {
-                @Override
-                public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                    mThumbView.setImageBitmap(resource);
-                    if (resource != null) {
-                        Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
-                            @Override
-                            public void onGenerated(Palette palette) {
-                                Palette.Swatch swatch = palette.getLightMutedSwatch();
-                                if (swatch != null) {
-                                    mToolbarLayout.setExpandedTitleColor(swatch.getTitleTextColor());
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-            Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in)
-                    .transform(new BlurTransformation(this)).into(mCoverIv);
+            Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
         } else {
-            mThumbView.setImageDrawable(null);
-            mCoverIv.setImageDrawable(null);
+
         }
     }
 
     @Override
     public void onProgress(int progress, int duration) {
+        //mProgressDurationTv.setText(MediaUtils.formatTime(progress) + "/" + MediaUtils.formatTime(duration));
+        //mProgressBar.setProgress(progress);
         //Log.v(TAG, "onProgress progress=" + progress + " duration=" + duration);
+    }
+
+    private class VpAdapter extends FragmentStatePagerAdapter {
+
+        public VpAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            switch (position) {
+                case 0:
+                    if (mFragmentArray[0] == null) {
+                        mFragmentArray[0] = new SongListFragment();
+                    }
+                    return mFragmentArray[0];
+            }
+            return null;
+        }
+
+        @Override
+        public Object instantiateItem(ViewGroup container, int position) {
+            RvFragment fragment = (RvFragment)super.instantiateItem(container, position);
+            mFragmentArray[position] = fragment;
+            return fragment;
+        }
+
+        @Override
+        public int getCount() {
+            return mFragmentArray.length;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return mFragmentArray[position].getTitle(MainActivity.this);
+        }
     }
 }

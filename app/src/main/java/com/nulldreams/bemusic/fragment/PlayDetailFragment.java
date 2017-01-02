@@ -2,6 +2,7 @@ package com.nulldreams.bemusic.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,9 +11,9 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.animation.ViewPropertyAnimation;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.manager.PlayManager;
 import com.nulldreams.bemusic.model.Song;
@@ -33,7 +34,8 @@ public class PlayDetailFragment extends Fragment {
         return new PlayDetailFragment();
     }
 
-    private ImageView mThumbIv, mBgIv;
+    private TextView mTitleTv, mArtistTv, mAlbumTv;
+    private ImageView mThumbIv;
 
     @Override
     public Animation onCreateAnimation(int transit, boolean enter, int nextAnim) {
@@ -56,18 +58,21 @@ public class PlayDetailFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        mTitleTv = (TextView)view.findViewById(R.id.play_detail_title);
+        mArtistTv = (TextView)view.findViewById(R.id.play_detail_artist);
+        mAlbumTv = (TextView)view.findViewById(R.id.play_detail_album);
         mThumbIv = (ImageView)view.findViewById(R.id.play_detail_thumb);
-        mBgIv = (ImageView)view.findViewById(R.id.play_detail_bg);
 
         Log.v(TAG, "onViewCreated view.width=" + view.getWidth() + " view.height=" + view.getHeight());
 
         Song song = PlayManager.getInstance(getContext()).getCurrentSong();
         if (song != null) {
+            mTitleTv.setText(song.getTitle());
+            mArtistTv.setText(song.getArtist());
+            mAlbumTv.setText(song.getAlbum());
             File file = song.getCoverFile(getContext());
             if (file.exists()) {
                 Glide.with(getContext()).load(file).into(mThumbIv);
-                Glide.with(getContext()).load(file).asBitmap().animate(android.R.anim.fade_in)
-                        .transform(new BlurTransformation(getContext())).into(mBgIv);
             }
         }
     }

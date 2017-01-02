@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ProgressBar">
+        <attr name="progressColor" format="color|reference"/>
+    </declare-styleable>
+    <declare-styleable name="RatioImageView">
+        <attr name="widthRatio" format="integer"/>
+        <attr name="heightRatio" format="integer"/>
+    </declare-styleable>
+</resources>

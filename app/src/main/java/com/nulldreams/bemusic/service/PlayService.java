@@ -1,12 +1,15 @@
 package com.nulldreams.bemusic.service;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.media.RemoteControlClient;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.IntDef;
 import android.util.Log;
+import android.widget.MediaController;
 
 import com.nulldreams.bemusic.model.Song;
 
@@ -182,6 +185,12 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
         } catch (Exception e) {
             e.printStackTrace();
             return 0;
+        }
+    }
+
+    public void seekTo (int position) {
+        if (isStarted() || isPaused()) {
+            mPlayer.seekTo(position);
         }
     }
 
