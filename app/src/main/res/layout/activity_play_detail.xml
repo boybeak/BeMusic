@@ -70,11 +70,35 @@
                 android:maxLines="1"
                 android:ellipsize="end"/>
         </LinearLayout>
+        <RelativeLayout
+            android:id="@+id/play_detail_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/play_detail_seek_bar"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:id="@+id/play_detail_position"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textColor="@android:color/darker_gray"
+                android:layout_alignParentLeft="true"
+                />
+            <TextView
+                android:id="@+id/play_detail_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textColor="@android:color/darker_gray"
+                android:layout_alignParentRight="true"
+                />
+        </RelativeLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:layout_below="@+id/play_detail_seek_bar"
+            android:layout_below="@+id/play_detail_time"
             android:gravity="center">
             <ImageView
                 android:id="@+id/play_detail_rule_change"

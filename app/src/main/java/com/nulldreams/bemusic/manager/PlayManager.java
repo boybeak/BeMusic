@@ -323,6 +323,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         return isPausedByUser;
     }
 
+    public void seekTo (int position) {
+        if (mService != null) {
+            mService.seekTo(position);
+        }
+    }
+
     public Song getCurrentSong () {
         return mSong;
     }

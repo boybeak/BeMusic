@@ -85,6 +85,7 @@
             android:layout_height="2dp"
             android:layout_toRightOf="@+id/main_mini_thumb"
             android:layout_alignTop="@+id/main_mini_thumb"
+            android:background="?attr/colorPrimaryDark"
             app:progressColor="?attr/colorAccent"
             />
     </RelativeLayout>
@@ -113,8 +114,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:tabMode="scrollable"
-                app:tabSelectedTextColor="?attr/colorAccent"
-                app:tabTextColor="@android:color/white"
+                app:tabSelectedTextColor="@android:color/white"
+                app:tabTextColor="@android:color/darker_gray"
                 />
         </android.support.design.widget.AppBarLayout>
         <android.support.v4.view.ViewPager

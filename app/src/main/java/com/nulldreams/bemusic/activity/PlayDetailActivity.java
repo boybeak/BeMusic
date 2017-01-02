@@ -18,13 +18,14 @@ import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.manager.ruler.Rulers;
 import com.nulldreams.bemusic.model.Song;
 import com.nulldreams.bemusic.service.PlayService;
+import com.nulldreams.bemusic.utils.MediaUtils;
 
 import java.io.File;
 import java.util.List;
 
 public class PlayDetailActivity extends AppCompatActivity implements PlayManager.Callback, PlayManager.ProgressCallback {
 
-    private TextView mTitleTv, mArtistTv, mAlbumTv;
+    private TextView mTitleTv, mArtistTv, mAlbumTv, mPositionTv, mDurationTv;
     private ImageView mThumbIv, mPlayPauseIv, mPreviousIv, mNextIv, mRuleIv, mPlayListIv;
     private SeekBar mSeekBar;
     private Toolbar mToolbar;
@@ -55,6 +56,25 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         }
     };
 
+    private boolean isSeeking = false;
+    private SeekBar.OnSeekBarChangeListener mSeekListener = new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            mPositionTv.setText(MediaUtils.formatTime(progress));
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+            isSeeking = true;
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            isSeeking = false;
+            PlayManager.getInstance(seekBar.getContext()).seekTo(seekBar.getProgress());
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -75,6 +95,9 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mTitleTv = (TextView)findViewById(R.id.play_detail_title);
         mArtistTv = (TextView)findViewById(R.id.play_detail_artist);
         mAlbumTv = (TextView)findViewById(R.id.play_detail_album);
+        mPositionTv = (TextView)findViewById(R.id.play_detail_position);
+        mDurationTv = (TextView)findViewById(R.id.play_detail_duration);
+
         mThumbIv = (ImageView)findViewById(R.id.play_detail_thumb);
         mSeekBar = (SeekBar)findViewById(R.id.play_detail_seek_bar);
         mPlayPauseIv = (ImageView)findViewById(R.id.play_detail_play_pause);
@@ -93,6 +116,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mNextIv.setOnClickListener(mClickListener);
         mRuleIv.setOnClickListener(mClickListener);
         mPlayListIv.setOnClickListener(mClickListener);
+        mSeekBar.setOnSeekBarChangeListener(mSeekListener);
 
         Song song = PlayManager.getInstance(this).getCurrentSong();
         if (song != null) {
@@ -170,10 +194,15 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
 
     @Override
     public void onProgress(int progress, int duration) {
+        if (isSeeking) {
+            return;
+        }
         if (mSeekBar.getMax() != duration) {
             mSeekBar.setMax(duration);
+            mDurationTv.setText(MediaUtils.formatTime(duration));
         }
         mSeekBar.setProgress(progress);
+        mPositionTv.setText(MediaUtils.formatTime(progress));
     }
 
     @Override
