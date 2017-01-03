@@ -2,7 +2,9 @@ package com.nulldreams.bemusic.activity;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
@@ -17,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -78,6 +81,19 @@ public class MainActivity extends AppCompatActivity
             } else if (id == mNextIv.getId()) {
                 PlayManager.getInstance(v.getContext()).next();
             }
+        }
+    };
+
+    private NavigationView.OnNavigationItemSelectedListener mNavListener = new NavigationView.OnNavigationItemSelectedListener() {
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            final int id = item.getItemId();
+            if (id == R.id.action_github) {
+                Intent it = new Intent(Intent.ACTION_VIEW);
+                it.setData(Uri.parse("https://github.com/boybeak/BeMusic"));
+                startActivity(it);
+            }
+            return false;
         }
     };
 //    private PlayDetailFragment mDetailFragment = PlayDetailFragment.newInstance();
@@ -147,6 +163,8 @@ public class MainActivity extends AppCompatActivity
         mPlayPauseIv.setOnClickListener(mClickListener);
         mPreviousIv.setOnClickListener(mClickListener);
         mNextIv.setOnClickListener(mClickListener);
+
+        mNavView.setNavigationItemSelectedListener(mNavListener);
 
         Glide.with(this).load(R.drawable.avatar).asBitmap()
                 .transform(new CropCircleTransformation(this)).into(mAvatarIv);
