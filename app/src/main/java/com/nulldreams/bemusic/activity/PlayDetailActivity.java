@@ -121,11 +121,9 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mSeekBar.setOnSeekBarChangeListener(mSeekListener);
 
         Song song = PlayManager.getInstance(this).getCurrentSong();
-        if (song != null) {
-            mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
-            onPlayRuleChanged(PlayManager.getInstance(this).getRule());
-            showSong(song);
-        }
+        mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
+        onPlayRuleChanged(PlayManager.getInstance(this).getRule());
+        showSong(song);
     }
 
     @Override
@@ -214,12 +212,20 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     }
 
     private void showSong (Song song) {
-        mTitleTv.setText(song.getTitle());
-        mArtistTv.setText(song.getArtist());
-        mAlbumTv.setText(song.getAlbum());
-        File file = song.getCoverFile(this);
-        if (file.exists()) {
-            Glide.with(this).load(file).into(mThumbIv);
+        if (song == null) {
+            mTitleTv.setText(R.string.app_name);
+            mArtistTv.setText(R.string.text_github_name);
+            mAlbumTv.setText(R.string.text_github_name);
+            Glide.with(this).load(R.drawable.avatar).animate(android.R.anim.fade_in).into(mThumbIv);
+        } else {
+            mTitleTv.setText(song.getTitle());
+            mArtistTv.setText(song.getArtist());
+            mAlbumTv.setText(song.getAlbum());
+            File file = song.getCoverFile(this);
+            if (file.exists()) {
+                Glide.with(this).load(file).into(mThumbIv);
+            }
         }
+
     }
 }

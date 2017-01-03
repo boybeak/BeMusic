@@ -107,6 +107,7 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:padding="8dp"
+                android:layout_margin="8dp"
                 android:background="@drawable/bg_item_round_sel"
                 app:srcCompat="@drawable/ic_repeat"
                 />
@@ -115,6 +116,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
+                android:layout_margin="8dp"
                 android:background="@drawable/bg_item_round_sel"
                 app:srcCompat="@drawable/ic_skip_previous"
                 />
@@ -123,6 +125,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
+                android:layout_margin="8dp"
                 android:background="@drawable/bg_item_round_sel"
                 app:srcCompat="@drawable/ic_play_pause_sel"
                 />
@@ -131,6 +134,7 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
+                android:layout_margin="8dp"
                 android:background="@drawable/bg_item_round_sel"
                 app:srcCompat="@drawable/ic_skip_next"
                 />
@@ -140,6 +144,7 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:padding="8dp"
+                android:layout_margin="8dp"
                 android:background="@drawable/bg_item_round_sel"
                 app:srcCompat="@drawable/ic_queue_music"
                 />

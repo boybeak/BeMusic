@@ -101,11 +101,6 @@ public class MainActivity extends AppCompatActivity
         Intent it = new Intent(this, PlayDetailActivity.class);
         startActivity(it);
         overridePendingTransition(R.anim.anim_bottom_in, 0);
-        /*FragmentManager manager = getSupportFragmentManager();
-        FragmentTransaction transaction = manager.beginTransaction();
-        transaction.add(R.id.main_content, mDetailFragment);
-        transaction.addToBackStack(null);
-        transaction.commit();*/
     }
 
     private boolean isResumed;
@@ -197,9 +192,7 @@ public class MainActivity extends AppCompatActivity
         super.onResume();
         mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
         Song song = PlayManager.getInstance(this).getCurrentSong();
-        if (song != null) {
-            showSong(song);
-        }
+        showSong(song);
 
         PlayManager.getInstance(this).registerCallback(this);
         PlayManager.getInstance(this).registerProgressCallback(this);
@@ -253,16 +246,23 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void showSong(Song song) {
-        mMiniTitleTv.setText(song.getTitle());
-        mMiniArtistAlbumTv.setText(song.getArtistAlbum());
-        File file = song.getCoverFile(this);
-        if (file.exists()) {
-            Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
-            Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).transform(new BlurTransformation(this))
-                    .into(mHeaderCover);
+        if (song != null) {
+            mMiniTitleTv.setText(song.getTitle());
+            mMiniArtistAlbumTv.setText(song.getArtistAlbum());
+            File file = song.getCoverFile(this);
+            if (file.exists()) {
+                Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
+                Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).transform(new BlurTransformation(this))
+                        .into(mHeaderCover);
+            }
         } else {
-
+            mMiniTitleTv.setText(R.string.app_name);
+            mMiniArtistAlbumTv.setText(R.string.text_github_name);
+            Glide.with(this).load(R.drawable.avatar).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
+            Glide.with(this).load(R.drawable.avatar).asBitmap().animate(android.R.anim.fade_in).transform(new BlurTransformation(this))
+                    .into(mHeaderCover);
         }
+
     }
 
     @Override

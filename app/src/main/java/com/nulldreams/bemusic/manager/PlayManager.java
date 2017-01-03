@@ -10,15 +10,20 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.RemoteControlClient;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.v7.app.NotificationCompat;
+import android.support.v7.widget.AppCompatDrawableManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -141,6 +146,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     private List<Song> mTotalList = null;
     private Song mSong = null;
+    private int mState = PlayService.STATE_IDLE;
     private PlayService mService;
 
     private Rule mPlayRule = Rulers.RULER_LIST_LOOP;
@@ -383,10 +389,19 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     }
 
     public void registerCallback (Callback callback) {
+        registerCallback(callback, false);
+    }
+
+    public void registerCallback (Callback callback, boolean updateOnceNow) {
         if (mCallbacks.contains(callback)) {
             return;
         }
         mCallbacks.add(callback);
+        if (updateOnceNow) {
+            callback.onPlayListPrepared(mTotalList);
+            callback.onPlayRuleChanged(mPlayRule);
+            callback.onPlayStateChanged(mState, mSong);
+        }
     }
 
     public void unregisterCallback (Callback callback) {
@@ -425,7 +440,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     @Override
     public void onStateChanged(@PlayService.State int state) {
-
+        mState = state;
         switch (state) {
             case PlayService.STATE_IDLE:
                 isPausedByUser = false;
@@ -503,13 +518,38 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             builder.setLargeIcon(null);
         }
 
+        boolean onGoing = isPlaying();
+
         RemoteViews remoteViews = new RemoteViews(mContext.getPackageName(), R.layout.layout_notification);
+        remoteViews.setImageViewBitmap(R.id.notification_thumb, bmp);
         remoteViews.setTextViewText(R.id.notification_title, mSong.getTitle());
         remoteViews.setTextViewText(R.id.notification_artist_album, mSong.getArtistAlbum());
-        remoteViews.setImageViewBitmap(R.id.notification_thumb, bmp);
-        builder.setCustomBigContentView(remoteViews);
 
-        boolean onGoing = isPlaying();
+        RemoteViews remoteBigViews = new RemoteViews(mContext.getPackageName(), R.layout.layout_notification_big);
+        remoteBigViews.setTextViewText(R.id.notification_title, mSong.getTitle());
+        remoteBigViews.setTextViewText(R.id.notification_artist_album, mSong.getArtistAlbum());
+        remoteBigViews.setImageViewBitmap(R.id.notification_thumb, bmp);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            remoteViews.setImageViewResource(R.id.notification_action_previous, R.drawable.ic_skip_previous);
+            remoteViews.setImageViewResource(R.id.notification_action_play_pause, onGoing ? R.drawable.ic_pause : R.drawable.ic_play);
+            remoteViews.setImageViewResource(R.id.notification_action_next, R.drawable.ic_skip_next);
+
+            remoteBigViews.setImageViewResource(R.id.notification_action_previous, R.drawable.ic_skip_previous);
+            remoteBigViews.setImageViewResource(R.id.notification_action_play_pause, onGoing ? R.drawable.ic_pause : R.drawable.ic_play);
+            remoteBigViews.setImageViewResource(R.id.notification_action_next, R.drawable.ic_skip_next);
+        } else {
+            remoteViews.setImageViewBitmap(R.id.notification_action_previous, getRemoteViewsPreLollipop(R.drawable.ic_skip_previous));
+            remoteViews.setImageViewBitmap(R.id.notification_action_play_pause, getRemoteViewsPreLollipop(onGoing ? R.drawable.ic_pause : R.drawable.ic_play));
+            remoteViews.setImageViewBitmap(R.id.notification_action_next, getRemoteViewsPreLollipop(R.drawable.ic_skip_next));
+
+            remoteBigViews.setImageViewBitmap(R.id.notification_action_previous, getRemoteViewsPreLollipop(R.drawable.ic_skip_previous));
+            remoteBigViews.setImageViewBitmap(R.id.notification_action_play_pause, getRemoteViewsPreLollipop(onGoing ? R.drawable.ic_pause : R.drawable.ic_play));
+            remoteBigViews.setImageViewBitmap(R.id.notification_action_next, getRemoteViewsPreLollipop(R.drawable.ic_skip_next));
+        }
+
+        builder.setCustomContentView(remoteViews);
+        builder.setCustomBigContentView(remoteBigViews);
 
         builder.setOngoing(onGoing);
         builder.setAutoCancel(!onGoing);
@@ -531,6 +571,15 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         if (bmp != null) {
             bmp.recycle();
         }
+    }
+
+    private Bitmap getRemoteViewsPreLollipop (@DrawableRes int res) {
+        Drawable drawable = AppCompatDrawableManager.get().getDrawable(mContext, res);
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+        return bitmap;
     }
 
     /*private void showNotificationLollipop (@PlayService.State int state) {
