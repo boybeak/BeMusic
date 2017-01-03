@@ -13,8 +13,10 @@
     <style name="AppTheme" parent="AbsTheme">
     </style>
 
-    <style name="PlayDetailTheme" parent="AppTheme">
+    <style name="AbsPlayDetailTheme" parent="AppTheme">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
+    </style>
+    <style name="PlayDetailTheme" parent="AbsPlayDetailTheme">
     </style>
 </resources>

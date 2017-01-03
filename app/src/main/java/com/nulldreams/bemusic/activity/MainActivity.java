@@ -16,7 +16,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -113,7 +112,7 @@ public class MainActivity extends AppCompatActivity
         mMiniArtistAlbumTv = (TextView)findViewById(R.id.main_mini_artist_album);
 
         mPlayPauseIv = (ImageView)findViewById(R.id.main_mini_action_play_pause);
-        mPreviousIv = (ImageView)findViewById(R.id.main_mini_action_previouse);
+        mPreviousIv = (ImageView)findViewById(R.id.main_mini_action_previous);
         mNextIv = (ImageView)findViewById(R.id.main_mini_action_next);
 
         mMiniPb = (ProgressBar)findViewById(R.id.main_mini_progress_bar);

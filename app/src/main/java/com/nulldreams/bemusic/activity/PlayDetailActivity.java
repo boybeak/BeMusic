@@ -83,12 +83,14 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_detail);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    View.SYSTEM_UI_FLAG_IMMERSIVE
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
             );
-        }
+        }*/
 
         mToolbar = (Toolbar)findViewById(R.id.play_detail_tool_bar);
 

@@ -5,4 +5,7 @@
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowContentTransitions">true</item>
     </style>
+    <style name="PlayDetailTheme" parent="AbsPlayDetailTheme">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
 </resources>
