@@ -3,6 +3,7 @@ package com.nulldreams.bemusic.manager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +29,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.nulldreams.bemusic.R;
+import com.nulldreams.bemusic.activity.PlayDetailActivity;
 import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.manager.ruler.Rulers;
 import com.nulldreams.bemusic.model.Song;
@@ -51,7 +53,11 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     private static final String TAG = PlayManager.class.getSimpleName();
 
-    public static final String ACTION_NOTIFICATION_DELETE = "com.nulldreams.music.Action.ACTION_NOTIFICATION_DELETE";
+    public static final String
+            ACTION_NOTIFICATION_DELETE = "com.nulldreams.music.Action.ACTION_NOTIFICATION_DELETE",
+            ACTION_REMOTE_PLAY_PAUSE = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_PLAY_PAUSE",
+            ACTION_REMOTE_PREVIOUS = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_PREVIOUS",
+            ACTION_REMOTE_NEXT = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_NEXT";
 
     private static PlayManager sManager = null;
 
@@ -98,6 +104,24 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 release();
                 this.unregister(mContext);
                 Log.v(TAG, "mNotifyDeleteReceiver onReceive " + intent.getAction());
+            }
+        }
+    };
+
+    private SimpleBroadcastReceiver mRemoteReceiver = new SimpleBroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            switch (action) {
+                case ACTION_REMOTE_PREVIOUS:
+                    PlayManager.getInstance(context).previous();
+                    break;
+                case ACTION_REMOTE_PLAY_PAUSE:
+                    PlayManager.getInstance(context).dispatch();
+                    break;
+                case ACTION_REMOTE_NEXT:
+                    PlayManager.getInstance(context).next();
+                    break;
             }
         }
     };
@@ -438,6 +462,16 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mNoisyReceiver.unregister(mContext);
     }
 
+    private void registerRemoteReceiver () {
+        mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_PREVIOUS));
+        mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_PLAY_PAUSE));
+        mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_NEXT));
+    }
+
+    private void unregisterRemoteReceiver () {
+        mRemoteReceiver.unregister(mContext);
+    }
+
     @Override
     public void onStateChanged(@PlayService.State int state) {
         mState = state;
@@ -458,6 +492,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 registerNoisyReceiver();
                 notification(state);
                 startUpdateProgressIfNeed();
+                registerRemoteReceiver();
                 isPausedByUser = false;
                 break;
             case PlayService.STATE_PAUSED:
@@ -487,6 +522,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             case PlayService.STATE_RELEASED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
+                unregisterRemoteReceiver();
                 isPausedByUser = false;
                 break;
         }
@@ -530,6 +566,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         remoteBigViews.setTextViewText(R.id.notification_artist_album, mSong.getArtistAlbum());
         remoteBigViews.setImageViewBitmap(R.id.notification_thumb, bmp);
 
+        PendingIntent playPauseIt = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_REMOTE_PLAY_PAUSE), 0);
+        PendingIntent previousIt = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_REMOTE_PREVIOUS), 0);
+        PendingIntent nextIt = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_REMOTE_NEXT), 0);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             remoteViews.setImageViewResource(R.id.notification_action_previous, R.drawable.ic_skip_previous);
             remoteViews.setImageViewResource(R.id.notification_action_play_pause, onGoing ? R.drawable.ic_pause : R.drawable.ic_play);
@@ -538,6 +578,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             remoteBigViews.setImageViewResource(R.id.notification_action_previous, R.drawable.ic_skip_previous);
             remoteBigViews.setImageViewResource(R.id.notification_action_play_pause, onGoing ? R.drawable.ic_pause : R.drawable.ic_play);
             remoteBigViews.setImageViewResource(R.id.notification_action_next, R.drawable.ic_skip_next);
+
         } else {
             remoteViews.setImageViewBitmap(R.id.notification_action_previous, getRemoteViewsPreLollipop(R.drawable.ic_skip_previous));
             remoteViews.setImageViewBitmap(R.id.notification_action_play_pause, getRemoteViewsPreLollipop(onGoing ? R.drawable.ic_pause : R.drawable.ic_play));
@@ -548,6 +589,14 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             remoteBigViews.setImageViewBitmap(R.id.notification_action_next, getRemoteViewsPreLollipop(R.drawable.ic_skip_next));
         }
 
+        remoteViews.setOnClickPendingIntent(R.id.notification_action_previous, previousIt);
+        remoteViews.setOnClickPendingIntent(R.id.notification_action_play_pause, playPauseIt);
+        remoteViews.setOnClickPendingIntent(R.id.notification_action_next, nextIt);
+
+        remoteBigViews.setOnClickPendingIntent(R.id.notification_action_previous, previousIt);
+        remoteBigViews.setOnClickPendingIntent(R.id.notification_action_play_pause, playPauseIt);
+        remoteBigViews.setOnClickPendingIntent(R.id.notification_action_next, nextIt);
+
         builder.setCustomContentView(remoteViews);
         builder.setCustomBigContentView(remoteBigViews);
 
@@ -555,6 +604,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         builder.setAutoCancel(!onGoing);
         PendingIntent deleteIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_NOTIFICATION_DELETE), 0);
         builder.setDeleteIntent(deleteIntent);
+        PendingIntent contentIntent = PendingIntent.getActivity(mContext, 0, new Intent(mContext, PlayDetailActivity.class), 0);
+        builder.setContentIntent(contentIntent);
         final Notification notification = builder.build();
 
         int notificationId = mSong.getId();
