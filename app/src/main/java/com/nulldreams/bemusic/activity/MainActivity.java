@@ -5,6 +5,7 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -31,9 +32,14 @@ import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.model.Song;
 import com.nulldreams.bemusic.service.PlayService;
 import com.nulldreams.bemusic.widget.ProgressBar;
+import com.nulldreams.bemusic.widget.RatioImageView;
 
 import java.io.File;
 import java.util.List;
+
+import jp.wasabeef.glide.transformations.BlurTransformation;
+import jp.wasabeef.glide.transformations.CropCircleTransformation;
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
 
 public class MainActivity extends AppCompatActivity
         implements PlayManager.Callback, PlayManager.ProgressCallback{
@@ -50,9 +56,11 @@ public class MainActivity extends AppCompatActivity
     private ViewPager mVp;
     private TabLayout mTl;
     private View mMiniPanel;
-    private ImageView mMiniThumbIv, mPlayPauseIv, mPreviousIv, mNextIv;
+    private ImageView mMiniThumbIv, mPlayPauseIv, mPreviousIv, mNextIv, mAvatarIv;
     private TextView mMiniTitleTv, mMiniArtistAlbumTv;
     private ProgressBar mMiniPb;
+    private NavigationView mNavView;
+    private RatioImageView mHeaderCover;
 
     private int mLength = 1;
     private RvFragment[] mFragmentArray = null;
@@ -117,6 +125,10 @@ public class MainActivity extends AppCompatActivity
 
         mMiniPb = (ProgressBar)findViewById(R.id.main_mini_progress_bar);
 
+        mNavView = (NavigationView)findViewById(R.id.main_nav);
+        mHeaderCover = (RatioImageView)mNavView.getHeaderView(0).findViewById(R.id.header_cover);
+        mAvatarIv = (ImageView)mNavView.getHeaderView(0).findViewById(R.id.header_avatar);
+
         mVp.setAdapter(new VpAdapter(getSupportFragmentManager()));
         mTl.setupWithViewPager(mVp);
 
@@ -136,6 +148,8 @@ public class MainActivity extends AppCompatActivity
         mPreviousIv.setOnClickListener(mClickListener);
         mNextIv.setOnClickListener(mClickListener);
 
+        Glide.with(this).load(R.drawable.avatar).asBitmap()
+                .transform(new CropCircleTransformation(this)).into(mAvatarIv);
     }
 
     @Override
@@ -149,6 +163,15 @@ public class MainActivity extends AppCompatActivity
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mDrawerToggle.onConfigurationChanged(newConfig);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (getSupportFragmentManager().getBackStackEntryCount() == 0) {
+            moveTaskToBack(true);
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override
@@ -217,6 +240,8 @@ public class MainActivity extends AppCompatActivity
         File file = song.getCoverFile(this);
         if (file.exists()) {
             Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
+            Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).transform(new BlurTransformation(this))
+                    .into(mHeaderCover);
         } else {
 
         }

@@ -17,6 +17,7 @@
         android:id="@+id/play_detail_tool_bar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
+        app:theme="@style/ToolbarTheme"
         android:fitsSystemWindows="true"/>
     <RelativeLayout
         android:layout_width="match_parent"
