@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
+        style="@style/TransitionStyle"
         app:widthRatio="1"
         app:heightRatio="1"
         />
@@ -150,4 +151,13 @@
                 />
         </LinearLayout>
     </RelativeLayout>
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/play_detail_quick_list"
+        android:layout_width="300dp"
+        android:layout_height="400dp"
+        android:background="@drawable/bg_item_round_nor"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:padding="8dp"
+        />
 </RelativeLayout>

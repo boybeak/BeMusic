@@ -13,26 +13,29 @@
         app:heightRatio="3"
         />
     <LinearLayout
+        android:id="@+id/header_avatar_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignTop="@+id/header_cover"
         android:layout_alignBottom="@+id/header_cover"
         android:orientation="vertical"
         android:padding="16dp"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        app:layout_heightPercent="30%">
         <ImageView
             android:id="@+id/header_avatar"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:scaleType="centerCrop"
             />
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/colorIcon"
-            android:text="@string/text_github_name"
-            />
     </LinearLayout>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        android:textColor="@color/colorIcon"
+        android:text="@string/text_github_name"
+        android:layout_below="@+id/header_avatar_layout"
+        />
 </RelativeLayout>

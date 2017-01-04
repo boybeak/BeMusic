@@ -22,4 +22,12 @@
     </style>
     <style name="PlayDetailTheme" parent="AbsPlayDetailTheme">
     </style>
+    <style name="QuickDialogTheme" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="android:windowBackground">?attr/colorPrimary</item>
+        <item name="android:textColorPrimary">@color/colorIcon</item>
+        <item name="windowMinWidthMajor">65%</item>
+        <item name="windowMinWidthMinor">80%</item>
+    </style>
+    <style name="TransitionStyle">
+    </style>
 </resources>

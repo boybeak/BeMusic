@@ -1,18 +1,30 @@
 package com.nulldreams.bemusic.activity;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.content.DialogInterface;
 import android.os.Build;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.nulldreams.adapter.DelegateAdapter;
+import com.nulldreams.adapter.DelegateParser;
+import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.bemusic.R;
+import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.bemusic.manager.PlayManager;
 import com.nulldreams.bemusic.manager.ruler.Rule;
 import com.nulldreams.bemusic.manager.ruler.Rulers;
@@ -25,10 +37,14 @@ import java.util.List;
 
 public class PlayDetailActivity extends AppCompatActivity implements PlayManager.Callback, PlayManager.ProgressCallback {
 
+    private static final String TAG = PlayDetailActivity.class.getSimpleName();
+
     private TextView mTitleTv, mArtistTv, mAlbumTv, mPositionTv, mDurationTv;
     private ImageView mThumbIv, mPlayPauseIv, mPreviousIv, mNextIv, mRuleIv, mPlayListIv;
     private SeekBar mSeekBar;
     private Toolbar mToolbar;
+    private RecyclerView mQuickRv;
+    private DelegateAdapter mAdapter;
 
     private View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
@@ -51,10 +67,66 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                     manager.setRule(Rulers.RULER_LIST_LOOP);
                 }
             } else if (id == mPlayListIv.getId()) {
-
+                if (mQuickRv.getVisibility() == View.VISIBLE) {
+                    hideQuickList();
+                } else {
+                    showQuickList();
+                }
             }
         }
     };
+
+    private void showQuickList () {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // get the center for the clipping circle
+            int cx = (mQuickRv.getLeft() + mQuickRv.getRight()) / 2;
+            int cy = (mQuickRv.getTop() + mQuickRv.getBottom()) / 2;
+
+            // get the final radius for the clipping circle
+            int finalRadius = Math.max(mQuickRv.getWidth(), mQuickRv.getHeight());
+
+            // create the animator for this view (the start radius is zero)
+            Animator anim =
+                    ViewAnimationUtils.createCircularReveal(mQuickRv, cx, cy, 0, finalRadius);
+
+            // make the view visible and start the animation
+            mQuickRv.setVisibility(View.VISIBLE);
+            anim.start();
+        } else {
+            mQuickRv.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideQuickList () {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            // get the center for the clipping circle
+            int cx = (mQuickRv.getLeft() + mQuickRv.getRight()) / 2;
+            int cy = (mQuickRv.getTop() + mQuickRv.getBottom()) / 2;
+
+            Log.v(TAG, "hideQuickList cx=" + cx + " cy=" + cy);
+
+            // get the initial radius for the clipping circle
+            int initialRadius = mQuickRv.getWidth();
+
+            // create the animation (the final radius is zero)
+            Animator anim =
+                    ViewAnimationUtils.createCircularReveal(mQuickRv, cx, cy, initialRadius, 0);
+
+            // make the view invisible when the animation is done
+            anim.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    super.onAnimationEnd(animation);
+                    mQuickRv.setVisibility(View.INVISIBLE);
+                }
+            });
+
+            // start the animation
+            anim.start();
+        } else {
+            mQuickRv.setVisibility(View.GONE);
+        }
+    }
 
     private boolean isSeeking = false;
     private SeekBar.OnSeekBarChangeListener mSeekListener = new SeekBar.OnSeekBarChangeListener() {
@@ -108,6 +180,18 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mRuleIv = (ImageView)findViewById(R.id.play_detail_rule_change);
         mPlayListIv = (ImageView)findViewById(R.id.play_detail_play_list);
 
+        mQuickRv = (RecyclerView)findViewById(R.id.play_detail_quick_list);
+        mQuickRv.setLayoutManager(new LinearLayoutManager(this));
+        mAdapter = new DelegateAdapter(this);
+        List<Song> songs = PlayManager.getInstance(this).getTotalList();
+        mAdapter.addAll(songs, new DelegateParser<Song>() {
+            @Override
+            public DelegateImpl parse(Song data) {
+                return new SongDelegate(data);
+            }
+        });
+        mQuickRv.setAdapter(mAdapter);
+
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDefaultDisplayHomeAsUpEnabled(true);
@@ -124,6 +208,15 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
         onPlayRuleChanged(PlayManager.getInstance(this).getRule());
         showSong(song);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mQuickRv.getVisibility() == View.VISIBLE) {
+            hideQuickList();
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override
@@ -174,9 +267,11 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                 break;
             case PlayService.STATE_RELEASED:
                 mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
+                mSeekBar.setProgress(0);
                 break;
             case PlayService.STATE_ERROR:
                 mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
+                mSeekBar.setProgress(0);
                 break;
         }
     }

@@ -1,5 +1,6 @@
 package com.nulldreams.bemusic.activity;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.net.Uri;
@@ -99,7 +100,13 @@ public class MainActivity extends AppCompatActivity
 //    private PlayDetailFragment mDetailFragment = PlayDetailFragment.newInstance();
     private void showPlayDetail () {
         Intent it = new Intent(this, PlayDetailActivity.class);
-        startActivity(it);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ActivityOptions options = ActivityOptions
+                    .makeSceneTransitionAnimation(this, mMiniThumbIv, "thumb");
+            startActivity(it, options.toBundle());
+        } else {
+            startActivity(it);
+        }
         overridePendingTransition(R.anim.anim_bottom_in, 0);
     }
 
@@ -143,12 +150,12 @@ public class MainActivity extends AppCompatActivity
         mVp.setAdapter(new VpAdapter(getSupportFragmentManager()));
         mTl.setupWithViewPager(mVp);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getWindow().getDecorView().setSystemUiVisibility(
                     View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                     | View.SYSTEM_UI_FLAG_FULLSCREEN
             );
-        }
+        }*/
 
         setSupportActionBar(mTb);
 
@@ -236,6 +243,14 @@ public class MainActivity extends AppCompatActivity
                 break;
             case PlayService.STATE_COMPLETED:
                 mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
+                break;
+            case PlayService.STATE_RELEASED:
+                mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
+                mMiniPb.setProgress(0);
+                break;
+            case PlayService.STATE_ERROR:
+                mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
+                mMiniPb.setProgress(0);
                 break;
         }
     }
