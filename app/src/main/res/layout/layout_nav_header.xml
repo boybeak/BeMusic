@@ -6,36 +6,30 @@
     <com.nulldreams.bemusic.widget.RatioImageView
         android:id="@+id/header_cover"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:src="@mipmap/ic_launcher"
         android:scaleType="centerCrop"
-        app:widthRatio="4"
-        app:heightRatio="3"
+        app:widthRatio="16"
+        app:heightRatio="9"
         />
-    <LinearLayout
-        android:id="@+id/header_avatar_layout"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignTop="@+id/header_cover"
-        android:layout_alignBottom="@+id/header_cover"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:gravity="center_vertical"
-        app:layout_heightPercent="30%">
-        <ImageView
-            android:id="@+id/header_avatar"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:scaleType="centerCrop"
-            />
-    </LinearLayout>
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:id="@+id/header_name"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="left|center_vertical"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         android:textColor="@color/colorIcon"
         android:text="@string/text_github_name"
-        android:layout_below="@+id/header_avatar_layout"
+        android:layout_alignBottom="@+id/header_cover"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        />
+    <ImageView
+        android:id="@+id/header_avatar"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:scaleType="centerCrop"
+        android:layout_above="@+id/header_name"
+        android:layout_margin="16dp"
         />
 </RelativeLayout>

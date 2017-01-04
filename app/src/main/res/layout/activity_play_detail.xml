@@ -14,12 +14,18 @@
         app:widthRatio="1"
         app:heightRatio="1"
         />
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/play_detail_tool_bar"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        app:theme="@style/ToolbarTheme"
-        android:fitsSystemWindows="true"/>
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true">
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/play_detail_tool_bar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:theme="@style/ToolbarTheme"
+            />
+    </FrameLayout>
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

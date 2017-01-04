@@ -9,50 +9,60 @@
         android:layout_width="96dp"
         android:layout_height="96dp"
         android:src="@mipmap/ic_launcher"
-        android:layout_margin="16dp"
-        />
-    <TextView
-        android:id="@+id/notification_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/notification_thumb"
-        android:layout_alignTop="@+id/notification_thumb"
-        android:textAppearance="@style/TextAppearance.AppCompat.Notification.Title.Media"
-        />
-    <TextView
-        android:id="@+id/notification_artist_album"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/notification_thumb"
-        android:layout_below="@+id/notification_title"
-        android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info.Media"
         />
     <LinearLayout
+        android:id="@+id/notification_action_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="32dp"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:layout_toRightOf="@+id/notification_thumb"
-        android:layout_below="@+id/notification_artist_album"
         android:layout_alignBottom="@+id/notification_thumb"
         >
         <ImageView
             android:id="@+id/notification_action_previous"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             />
         <ImageView
             android:id="@+id/notification_action_play_pause"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             />
         <ImageView
             android:id="@+id/notification_action_next"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_weight="1"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:layout_alignTop="@+id/notification_thumb"
+        android:layout_above="@+id/notification_action_layout"
+        android:layout_toRightOf="@+id/notification_thumb"
+        android:gravity="left|center_vertical"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp">
+        <TextView
+            android:id="@+id/notification_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Notification.Title.Media"
+            android:ellipsize="end"
+            android:maxLines="1"
+            />
+        <TextView
+            android:id="@+id/notification_artist_album"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info.Media"
+            android:ellipsize="end"
+            android:maxLines="1"
             />
     </LinearLayout>
 </RelativeLayout>

@@ -12,6 +12,7 @@ import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.activity.MainActivity;
+import com.nulldreams.bemusic.adapter.SongDecoration;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.bemusic.manager.PlayManager;
 import com.nulldreams.bemusic.manager.ruler.Rule;
@@ -47,10 +48,13 @@ public class SongListFragment extends RvFragment
         }
     };
 
+    private SongDecoration mSongDecoration;
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
+        mSongDecoration = new SongDecoration(getContext());
+        getRecyclerView().addItemDecoration(mSongDecoration);
         List<Song> songs = PlayManager.getInstance(getContext()).getTotalList();
         if (songs != null) {
             setSongList(songs);
@@ -79,6 +83,12 @@ public class SongListFragment extends RvFragment
         PlayManager.getInstance(getContext()).unregisterCallback(this);
         getRecyclerView().removeOnScrollListener(mScrollListener);
         isResumed = false;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        getRecyclerView().removeItemDecoration(mSongDecoration);
     }
 
     @Override

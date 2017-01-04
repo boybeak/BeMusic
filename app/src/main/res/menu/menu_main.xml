@@ -7,4 +7,14 @@
         android:title="@string/title_menu_github"
         android:icon="@drawable/ic_github_circle"
         />
+    <item
+        android:id="@+id/action_star_me"
+        android:title="@string/title_menu_star_me"
+        android:icon="@drawable/ic_star_circle"
+        />
+    <item
+        android:id="@+id/action_help"
+        android:title="@string/title_menu_help"
+        android:icon="@drawable/ic_help_circle"
+        />
 </menu>

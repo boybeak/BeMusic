@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">BeMusic</string>
     <string name="title_song_list">Playlist</string>
-    <string name="title_menu_github">Github</string>
-    <string name="text_github_name">boybeak</string>
+    <string name="title_menu_github">Source Code</string>
+    <string name="title_menu_star_me">Star Me</string>
+    <string name="title_menu_help">Help</string>
+    <string name="text_github_name">boybeak@gmail.com</string>
 </resources>
