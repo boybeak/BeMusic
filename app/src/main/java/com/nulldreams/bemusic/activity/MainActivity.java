@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity
 
         PlayManager.getInstance(this).registerCallback(this);
         PlayManager.getInstance(this).registerProgressCallback(this);
-        PlayManager.getInstance(this).unlockScreenControls();
+        //PlayManager.getInstance(this).unlockScreenControls();
         isResumed = true;
     }
 
@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity
         super.onPause();
         PlayManager.getInstance(this).unregisterCallback(this);
         PlayManager.getInstance(this).unregisterProgressCallback(this);
-        PlayManager.getInstance(this).lockScreenControls();
+        //PlayManager.getInstance(this).lockScreenControls();
         isResumed = false;
     }
 

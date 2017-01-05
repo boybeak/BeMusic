@@ -2,6 +2,8 @@ package com.nulldreams.bemusic.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -276,13 +278,21 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
 
     @Override
     public void onPlayRuleChanged(Rule rule) {
+        SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        int id = 0;
         if (rule == Rulers.RULER_LIST_LOOP) {
             mRuleIv.setImageResource(R.drawable.ic_repeat);
+            id = 0;
         } else if (rule == Rulers.RULER_SINGLE_LOOP) {
             mRuleIv.setImageResource(R.drawable.ic_repeat_once);
+            id = 1;
         } else if (rule == Rulers.RULER_RANDOM) {
             mRuleIv.setImageResource(R.drawable.ic_shuffle);
+            id = 2;
         }
+        editor.putInt("rule", id);
+        editor.commit();
     }
 
     @Override

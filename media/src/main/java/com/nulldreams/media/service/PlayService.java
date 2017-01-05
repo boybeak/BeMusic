@@ -46,7 +46,6 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
 
     @Override
     public void onSeekComplete(MediaPlayer mp) {
-
     }
 
     @IntDef({STATE_IDLE, STATE_INITIALIZED, STATE_PREPARING,
