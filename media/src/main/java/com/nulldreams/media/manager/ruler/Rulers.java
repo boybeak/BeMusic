@@ -1,6 +1,6 @@
-package com.nulldreams.bemusic.manager.ruler;
+package com.nulldreams.media.manager.ruler;
 
-import com.nulldreams.bemusic.model.Song;
+import com.nulldreams.media.model.Song;
 
 import java.util.List;
 import java.util.Random;

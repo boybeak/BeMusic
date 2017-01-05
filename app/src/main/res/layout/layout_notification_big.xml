@@ -2,13 +2,16 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_item_sel"
     >
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:background="@color/colorPrimary"
+        />
     <ImageView
         android:id="@+id/notification_thumb"
         android:layout_width="96dp"
         android:layout_height="96dp"
-        android:src="@mipmap/ic_launcher"
         />
     <LinearLayout
         android:id="@+id/notification_action_layout"

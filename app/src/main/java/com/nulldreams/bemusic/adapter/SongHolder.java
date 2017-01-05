@@ -9,9 +9,9 @@ import com.bumptech.glide.Glide;
 import com.nulldreams.adapter.AbsViewHolder;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.bemusic.R;
-import com.nulldreams.bemusic.manager.PlayManager;
-import com.nulldreams.bemusic.model.Song;
-import com.nulldreams.bemusic.utils.MediaUtils;
+import com.nulldreams.media.manager.PlayManager;
+import com.nulldreams.media.model.Song;
+import com.nulldreams.media.utils.MediaUtils;
 
 import java.io.File;
 

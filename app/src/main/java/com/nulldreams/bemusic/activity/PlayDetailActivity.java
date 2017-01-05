@@ -2,9 +2,7 @@ package com.nulldreams.bemusic.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.content.DialogInterface;
 import android.os.Build;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,12 +23,12 @@ import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
-import com.nulldreams.bemusic.manager.PlayManager;
-import com.nulldreams.bemusic.manager.ruler.Rule;
-import com.nulldreams.bemusic.manager.ruler.Rulers;
-import com.nulldreams.bemusic.model.Song;
-import com.nulldreams.bemusic.service.PlayService;
-import com.nulldreams.bemusic.utils.MediaUtils;
+import com.nulldreams.media.manager.PlayManager;
+import com.nulldreams.media.manager.ruler.Rule;
+import com.nulldreams.media.manager.ruler.Rulers;
+import com.nulldreams.media.model.Song;
+import com.nulldreams.media.service.PlayService;
+import com.nulldreams.media.utils.MediaUtils;
 
 import java.io.File;
 import java.util.List;

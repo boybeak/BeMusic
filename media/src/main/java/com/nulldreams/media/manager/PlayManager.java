@@ -1,9 +1,8 @@
-package com.nulldreams.bemusic.manager;
+package com.nulldreams.media.manager;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -11,32 +10,25 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.RemoteControlClient;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
 import android.support.v7.app.NotificationCompat;
-import android.support.v7.widget.AppCompatDrawableManager;
 import android.util.Log;
-import android.widget.RemoteViews;
 
-import com.nulldreams.bemusic.R;
-import com.nulldreams.bemusic.activity.PlayDetailActivity;
-import com.nulldreams.bemusic.manager.ruler.Rule;
-import com.nulldreams.bemusic.manager.ruler.Rulers;
-import com.nulldreams.bemusic.model.Song;
-import com.nulldreams.bemusic.receiver.LockControlReceiver;
-import com.nulldreams.bemusic.receiver.SimpleBroadcastReceiver;
-import com.nulldreams.bemusic.service.PlayService;
-import com.nulldreams.bemusic.utils.MediaUtils;
+import com.nulldreams.media.manager.notification.NotificationAgent;
+import com.nulldreams.media.manager.ruler.Rule;
+import com.nulldreams.media.manager.ruler.Rulers;
+import com.nulldreams.media.model.Song;
+import com.nulldreams.media.receiver.LockControlReceiver;
+import com.nulldreams.media.receiver.SimpleBroadcastReceiver;
+import com.nulldreams.media.service.PlayService;
+import com.nulldreams.media.utils.MediaUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -176,6 +168,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     private Rule mPlayRule = Rulers.RULER_LIST_LOOP;
 
     private boolean isPausedByUser = false;
+
+    private NotificationAgent mNotifyAgent = null;
 
     private PlayManager (Context context) {
         mContext = context;
@@ -530,8 +524,20 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             callback.onPlayStateChanged(state, mSong);
         }
     }
+
+    public void setNotificationAgent (NotificationAgent agent) {
+        this.mNotifyAgent = agent;
+    }
+
+    public NotificationAgent getNotificationAgent () {
+        return mNotifyAgent;
+    }
+
     private int mLastNotificationId;
     private void notification (@PlayService.State int state) {
+        if (mNotifyAgent == null) {
+            return;
+        }
         NotificationManager manager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (mLastNotificationId > 0) {
@@ -539,110 +545,29 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             manager.cancel(mLastNotificationId);
         }
 
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
-        builder.setContentTitle(mSong.getTitle());
-        builder.setContentText(mSong.getArtistAlbum());
-        builder.setWhen(System.currentTimeMillis());
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-
-        File file = mSong.getCoverFile(mContext);
-        Bitmap bmp = null;
-        if (file.exists()) {
-            bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
-            builder.setLargeIcon(bmp);
-        } else {
-            builder.setLargeIcon(null);
-        }
-
         boolean onGoing = isPlaying();
+        NotificationCompat.Builder builder = mNotifyAgent.getBuilder(mContext, this, state, mSong);
+        if (builder != null) {
+            builder.setOngoing(onGoing);
+            builder.setAutoCancel(!onGoing);
 
-        RemoteViews remoteViews = new RemoteViews(mContext.getPackageName(), R.layout.layout_notification);
-        remoteViews.setImageViewBitmap(R.id.notification_thumb, bmp);
-        remoteViews.setTextViewText(R.id.notification_title, mSong.getTitle());
-        remoteViews.setTextViewText(R.id.notification_artist_album, mSong.getArtistAlbum());
+            final Notification notification = builder.build();
 
-        RemoteViews remoteBigViews = new RemoteViews(mContext.getPackageName(), R.layout.layout_notification_big);
-        remoteBigViews.setTextViewText(R.id.notification_title, mSong.getTitle());
-        remoteBigViews.setTextViewText(R.id.notification_artist_album, mSong.getArtistAlbum());
-        remoteBigViews.setImageViewBitmap(R.id.notification_thumb, bmp);
-
-        PendingIntent playPauseIt = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_REMOTE_PLAY_PAUSE), 0);
-        PendingIntent previousIt = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_REMOTE_PREVIOUS), 0);
-        PendingIntent nextIt = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_REMOTE_NEXT), 0);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            remoteViews.setImageViewResource(R.id.notification_action_previous, R.drawable.ic_skip_previous);
-            remoteViews.setImageViewResource(R.id.notification_action_play_pause, onGoing ? R.drawable.ic_pause : R.drawable.ic_play);
-            remoteViews.setImageViewResource(R.id.notification_action_next, R.drawable.ic_skip_next);
-
-            remoteBigViews.setImageViewResource(R.id.notification_action_previous, R.drawable.ic_skip_previous);
-            remoteBigViews.setImageViewResource(R.id.notification_action_play_pause, onGoing ? R.drawable.ic_pause : R.drawable.ic_play);
-            remoteBigViews.setImageViewResource(R.id.notification_action_next, R.drawable.ic_skip_next);
-
-        } else {
-            remoteViews.setImageViewBitmap(R.id.notification_action_previous, getRemoteViewsPreLollipop(R.drawable.ic_skip_previous));
-            remoteViews.setImageViewBitmap(R.id.notification_action_play_pause, getRemoteViewsPreLollipop(onGoing ? R.drawable.ic_pause : R.drawable.ic_play));
-            remoteViews.setImageViewBitmap(R.id.notification_action_next, getRemoteViewsPreLollipop(R.drawable.ic_skip_next));
-
-            remoteBigViews.setImageViewBitmap(R.id.notification_action_previous, getRemoteViewsPreLollipop(R.drawable.ic_skip_previous));
-            remoteBigViews.setImageViewBitmap(R.id.notification_action_play_pause, getRemoteViewsPreLollipop(onGoing ? R.drawable.ic_pause : R.drawable.ic_play));
-            remoteBigViews.setImageViewBitmap(R.id.notification_action_next, getRemoteViewsPreLollipop(R.drawable.ic_skip_next));
+            int notificationId = mSong.getId();
+            Log.v(TAG, "notification onGoing=" + onGoing + " notificationId=" + notificationId);
+            if (onGoing) {
+                mService.startForeground(notificationId, notification);
+                mNotifyDeleteReceiver.unregister(mContext);
+            } else {
+                mService.stopForeground(true);
+                manager.notify(notificationId, notification);
+                mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
+            }
+            mNotifyAgent.afterNotify();
+            mLastNotificationId = notificationId;
         }
 
-        remoteViews.setOnClickPendingIntent(R.id.notification_action_previous, previousIt);
-        remoteViews.setOnClickPendingIntent(R.id.notification_action_play_pause, playPauseIt);
-        remoteViews.setOnClickPendingIntent(R.id.notification_action_next, nextIt);
-
-        remoteBigViews.setOnClickPendingIntent(R.id.notification_action_previous, previousIt);
-        remoteBigViews.setOnClickPendingIntent(R.id.notification_action_play_pause, playPauseIt);
-        remoteBigViews.setOnClickPendingIntent(R.id.notification_action_next, nextIt);
-
-        builder.setCustomContentView(remoteViews);
-        builder.setCustomBigContentView(remoteBigViews);
-
-        builder.setOngoing(onGoing);
-        builder.setAutoCancel(!onGoing);
-        PendingIntent deleteIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_NOTIFICATION_DELETE), 0);
-        builder.setDeleteIntent(deleteIntent);
-        PendingIntent contentIntent = PendingIntent.getActivity(mContext, 0, new Intent(mContext, PlayDetailActivity.class), 0);
-        builder.setContentIntent(contentIntent);
-        final Notification notification = builder.build();
-
-        int notificationId = mSong.getId();
-        Log.v(TAG, "notification onGoing=" + onGoing + " notificationId=" + notificationId);
-        if (onGoing) {
-            mService.startForeground(notificationId, notification);
-            mNotifyDeleteReceiver.unregister(mContext);
-        } else {
-            mService.stopForeground(true);
-            manager.notify(notificationId, notification);
-            mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
-        }
-        mLastNotificationId = notificationId;
-        if (bmp != null) {
-            bmp.recycle();
-        }
     }
-
-    private Bitmap getRemoteViewsPreLollipop (@DrawableRes int res) {
-        Drawable drawable = AppCompatDrawableManager.get().getDrawable(mContext, res);
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-        return bitmap;
-    }
-
-    /*private void showNotificationLollipop (@PlayService.State int state) {
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext);
-        builder.setContentTitle(mSong.getTitle());
-        builder.setContentText(mSong.getArtistAlbum());
-        builder.setWhen(System.currentTimeMillis());
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-
-        MediaSessionManager sessionManager = (MediaSessionManager)mContext.getSystemService(Context.MEDIA_SESSION_SERVICE);
-        MediaController.
-    }*/
 
     public interface Callback {
         void onPlayListPrepared (List<Song> songs);

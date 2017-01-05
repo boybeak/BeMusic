@@ -31,10 +31,10 @@ import com.bumptech.glide.Glide;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.fragment.RvFragment;
 import com.nulldreams.bemusic.fragment.SongListFragment;
-import com.nulldreams.bemusic.manager.PlayManager;
-import com.nulldreams.bemusic.manager.ruler.Rule;
-import com.nulldreams.bemusic.model.Song;
-import com.nulldreams.bemusic.service.PlayService;
+import com.nulldreams.media.manager.PlayManager;
+import com.nulldreams.media.manager.ruler.Rule;
+import com.nulldreams.media.model.Song;
+import com.nulldreams.media.service.PlayService;
 import com.nulldreams.bemusic.widget.ProgressBar;
 import com.nulldreams.bemusic.widget.RatioImageView;
 
@@ -43,7 +43,6 @@ import java.util.List;
 
 import jp.wasabeef.glide.transformations.BlurTransformation;
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
-import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
 
 public class MainActivity extends AppCompatActivity
         implements PlayManager.Callback, PlayManager.ProgressCallback{

@@ -3,7 +3,7 @@ package com.nulldreams.bemusic.adapter;
 import com.nulldreams.adapter.annotation.AnnotationDelegate;
 import com.nulldreams.adapter.annotation.DelegateInfo;
 import com.nulldreams.bemusic.R;
-import com.nulldreams.bemusic.model.Song;
+import com.nulldreams.media.model.Song;
 
 /**
  * Created by boybe on 2016/12/27.

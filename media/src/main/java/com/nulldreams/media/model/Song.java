@@ -1,4 +1,4 @@
-package com.nulldreams.bemusic.model;
+package com.nulldreams.media.model;
 
 import android.content.Context;
 import android.os.Bundle;

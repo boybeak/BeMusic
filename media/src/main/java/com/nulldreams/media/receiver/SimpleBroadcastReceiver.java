@@ -1,4 +1,4 @@
-package com.nulldreams.bemusic.receiver;
+package com.nulldreams.media.receiver;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;

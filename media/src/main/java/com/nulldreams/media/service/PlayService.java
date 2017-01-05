@@ -1,17 +1,12 @@
-package com.nulldreams.bemusic.service;
+package com.nulldreams.media.service;
 
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.media.MediaPlayer;
-import android.media.RemoteControlClient;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.IntDef;
 import android.util.Log;
-import android.widget.MediaController;
-
-import com.nulldreams.bemusic.model.Song;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;

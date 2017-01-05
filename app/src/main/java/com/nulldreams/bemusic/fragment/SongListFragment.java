@@ -11,13 +11,12 @@ import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
-import com.nulldreams.bemusic.activity.MainActivity;
 import com.nulldreams.bemusic.adapter.SongDecoration;
 import com.nulldreams.bemusic.adapter.SongDelegate;
-import com.nulldreams.bemusic.manager.PlayManager;
-import com.nulldreams.bemusic.manager.ruler.Rule;
-import com.nulldreams.bemusic.model.Song;
-import com.nulldreams.bemusic.service.PlayService;
+import com.nulldreams.media.manager.PlayManager;
+import com.nulldreams.media.manager.ruler.Rule;
+import com.nulldreams.media.model.Song;
+import com.nulldreams.media.service.PlayService;
 
 import java.util.List;
 

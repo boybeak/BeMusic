@@ -1,4 +1,4 @@
-package com.nulldreams.bemusic.utils;
+package com.nulldreams.media.utils;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -6,7 +6,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 
-import com.nulldreams.bemusic.model.Song;
+import com.nulldreams.media.model.Song;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
