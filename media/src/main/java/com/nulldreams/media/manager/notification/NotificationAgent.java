@@ -12,6 +12,18 @@ import com.nulldreams.media.service.PlayService;
  */
 
 public interface NotificationAgent {
+    /**
+     * custom your notification style
+     * @param context
+     * @param manager
+     * @param state
+     * @param song
+     * @return
+     */
     NotificationCompat.Builder getBuilder (Context context, PlayManager manager, @PlayService.State int state, Song song);
+
+    /**
+     * you can recycle a bitmap in this method after the notification is already shown
+     */
     void afterNotify();
 }

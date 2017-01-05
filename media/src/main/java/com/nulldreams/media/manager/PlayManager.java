@@ -248,10 +248,20 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mContext.stopService(new Intent(mContext, PlayService.class));
     }
 
+    /**
+     *  dispatch the current song
+     */
     public void dispatch () {
         dispatch(mSong);
     }
 
+    /**
+     * dispatch a song.If the song is paused, then resume.If the song is not started, then start it.If the song is playing, then pause it.
+     * {@link PlayService#STATE_COMPLETED}
+     * @param song the song you want to dispatch, if null, dispatch a song from {@link Rule}.
+     * @see Song;
+     * @see com.nulldreams.media.manager.ruler.Rule#next(Song, List, boolean);
+     */
     public void dispatch(final Song song) {
         Log.v(TAG, "dispatch song=" + song);
         Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
@@ -284,6 +294,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     }
 
+    /**
+     * you can set a custom {@link Rule} by this
+     * @param rule
+     */
     public void setRule (@NonNull Rule rule) {
         mPlayRule = rule;
         for (Callback callback : mCallbacks) {
@@ -291,18 +305,32 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         }
     }
 
+    /**
+     *
+     * @return the current {@link Rule}
+     */
     public Rule getRule () {
         return mPlayRule;
     }
 
+    /**
+     * next song by user action
+     */
     public void next() {
         next(true);
     }
 
+    /**
+     * next song triggered by {@link #onStateChanged(int)} and {@link PlayService#STATE_COMPLETED}
+     * @param isUserAction
+     */
     private void next(boolean isUserAction) {
         dispatch(mPlayRule.next(mSong, mTotalList, isUserAction));
     }
 
+    /**
+     * previous song by user action
+     */
     public void previous () {
         previous(true);
     }
@@ -311,21 +339,35 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         dispatch(mPlayRule.previous(mSong, mTotalList, isUserAction));
     }
 
+    /**
+     * resume play
+     */
     public void resume () {
         if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
             mService.resumePlayer();
         }
     }
 
+    /**
+     * pause a playing song by user action
+     */
     public void pause () {
         pause(true);
     }
 
+    /**
+     * pause a playing song
+     * @param isPausedByUser false if triggered by {@link AudioManager#AUDIOFOCUS_LOSS} or
+     *                       {@link AudioManager#AUDIOFOCUS_LOSS_TRANSIENT}
+     */
     private void pause (boolean isPausedByUser) {
         mService.pausePlayer();
         this.isPausedByUser = isPausedByUser;
     }
 
+    /**
+     * release a playing song
+     */
     public void release () {
         mService.releasePlayer();
         unbindPlayService();
@@ -335,6 +377,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mService = null;
     }
 
+    /**
+     *
+     * @return
+     */
     public boolean isPlaying () {
         return mService != null && mService.isStarted();
     }
@@ -353,6 +399,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         }
     }
 
+    /**
+     *
+     * @return a song current playing or paused, may be null
+     */
     public Song getCurrentSong () {
         return mSong;
     }
@@ -360,7 +410,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     private ComponentName mEventReceiver = null;
     private RemoteControlClient mRemoteControlClient = null;
 
-    public void lockScreenControls () {
+    private void lockScreenControls () {
         if (mService != null && (mService.isStarted() || mService.isPaused())) {
             mEventReceiver = new ComponentName(mContext, LockControlReceiver.class);
             AudioManager audioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
@@ -381,7 +431,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         }
     }
 
-    public void unlockScreenControls () {
+    private void unlockScreenControls () {
         AudioManager audioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
         if (mEventReceiver != null) {
             audioManager.unregisterMediaButtonEventReceiver(mEventReceiver);
@@ -525,6 +575,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         }
     }
 
+    /**
+     * you can custom a {@link Notification} by the {@link NotificationAgent}
+     * @param agent
+     */
     public void setNotificationAgent (NotificationAgent agent) {
         this.mNotifyAgent = agent;
     }

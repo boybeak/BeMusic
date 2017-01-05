@@ -8,6 +8,7 @@ import java.io.File;
 
 /**
  * Created by boybe on 2016/12/26.
+ * A model for Audio file
  */
 
 public class Song {
