@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 
+import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 
 import java.text.DecimalFormat;
@@ -17,6 +18,8 @@ import java.util.List;
  */
 
 public class MediaUtils {
+
+    private static final String TAG = MediaUtils.class.getSimpleName();
 
     public static final DecimalFormat FORMAT = new DecimalFormat("00");
 
@@ -44,6 +47,49 @@ public class MediaUtils {
             MediaStore.Audio.Media.MIME_TYPE,
             MediaStore.Audio.Media.DATA
     };
+
+    public static final String[] ALBUM_COLUMNS = new String[] {
+            MediaStore.Audio.Albums._ID,
+            MediaStore.Audio.Albums.ALBUM,
+            MediaStore.Audio.Albums.ALBUM_KEY,
+            MediaStore.Audio.Albums.ALBUM_ART,
+            MediaStore.Audio.Albums.ARTIST,
+            MediaStore.Audio.Albums.NUMBER_OF_SONGS,
+            MediaStore.Audio.Albums.FIRST_YEAR,
+            MediaStore.Audio.Albums.LAST_YEAR,
+    };
+
+    public static List<Album> getAlbumList (Context context) {
+        ContentResolver resolver = context.getContentResolver();
+        Cursor cursor = resolver.query(
+                MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                ALBUM_COLUMNS,
+                null,
+                null,
+                null);
+        int count = cursor.getCount();
+        if (count > 0) {
+            List<Album> albumList = new ArrayList<>();
+            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                int id, minYear, maxYear, numSongs;
+                String album, albumKey, artist, albumArt;
+                id = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Albums._ID));
+                minYear = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Albums.FIRST_YEAR));
+                maxYear = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Albums.LAST_YEAR));
+                numSongs = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Albums.NUMBER_OF_SONGS));
+                album = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM));
+                albumKey = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_KEY));
+                artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ARTIST));
+                albumArt = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART));
+
+                Album albumObj = new Album(id, minYear, maxYear, numSongs,
+                        album, albumKey, artist, albumArt);
+                albumList.add(albumObj);
+            }
+            return albumList;
+        }
+        return null;
+    }
 
     public static List<Song> getAudioList(Context context) {
         List<Song> audioList = new ArrayList<Song>();

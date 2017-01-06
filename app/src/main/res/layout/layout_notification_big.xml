@@ -66,6 +66,7 @@
             android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info.Media"
             android:ellipsize="end"
             android:maxLines="1"
+            android:layout_marginTop="8dp"
             />
     </LinearLayout>
 </RelativeLayout>

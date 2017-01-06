@@ -24,6 +24,7 @@ import android.util.Log;
 import com.nulldreams.media.manager.notification.NotificationAgent;
 import com.nulldreams.media.manager.ruler.Rule;
 import com.nulldreams.media.manager.ruler.Rulers;
+import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 import com.nulldreams.media.receiver.LockControlReceiver;
 import com.nulldreams.media.receiver.SimpleBroadcastReceiver;
@@ -159,7 +160,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     private List<ProgressCallback> mProgressCallbacks;
 
     private Context mContext;
-
+    private List<Album> mTotalAlbumList = null;
     private List<Song> mTotalList = null;
     private Song mSong = null;
     private int mState = PlayService.STATE_IDLE;
@@ -182,6 +183,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             protected List<Song> doInBackground(Context... params) {
                 Context context = params[0];
                 List<Song> songs = MediaUtils.getAudioList(context);
+                mTotalAlbumList = MediaUtils.getAlbumList(context);
                 for (Song song : songs) {
                     File file = song.getCoverFile(context);
                     if (file.exists()) {
@@ -224,6 +226,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 startPlayService();*/
                 for (Callback callback : mCallbacks) {
                     callback.onPlayListPrepared(songs);
+                    callback.onAlbumListPrepared(mTotalAlbumList);
                 }
             }
         }.execute(mContext);
@@ -231,6 +234,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     public List<Song> getTotalList () {
         return mTotalList;
+    }
+
+    public List<Album> getAlbumList () {
+        return mTotalAlbumList;
     }
 
     private void bindPlayService () {
@@ -625,6 +632,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     public interface Callback {
         void onPlayListPrepared (List<Song> songs);
+        void onAlbumListPrepared (List<Album> albums);
         void onPlayStateChanged (@PlayService.State int state, Song song);
         void onPlayRuleChanged (Rule rule);
     }

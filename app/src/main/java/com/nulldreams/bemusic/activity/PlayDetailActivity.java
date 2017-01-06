@@ -2,9 +2,11 @@ package com.nulldreams.bemusic.activity;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -28,6 +30,7 @@ import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.media.manager.PlayManager;
 import com.nulldreams.media.manager.ruler.Rule;
 import com.nulldreams.media.manager.ruler.Rulers;
+import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 import com.nulldreams.media.service.PlayService;
 import com.nulldreams.media.utils.MediaUtils;
@@ -41,6 +44,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
 
     private TextView mTitleTv, mArtistTv, mAlbumTv, mPositionTv, mDurationTv;
     private ImageView mThumbIv, mPlayPauseIv, mPreviousIv, mNextIv, mRuleIv, mPlayListIv;
+    private View mPanel;
     private SeekBar mSeekBar;
     private Toolbar mToolbar;
     private RecyclerView mQuickRv;
@@ -172,6 +176,8 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mPositionTv = (TextView)findViewById(R.id.play_detail_position);
         mDurationTv = (TextView)findViewById(R.id.play_detail_duration);
 
+        mPanel = findViewById(R.id.play_detail_panel);
+
         mThumbIv = (ImageView)findViewById(R.id.play_detail_thumb);
         mSeekBar = (SeekBar)findViewById(R.id.play_detail_seek_bar);
         mPlayPauseIv = (ImageView)findViewById(R.id.play_detail_play_pause);
@@ -211,6 +217,11 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     }
 
     @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+    }
+
+    @Override
     public void onBackPressed() {
         if (mQuickRv.getVisibility() == View.VISIBLE) {
             hideQuickList();
@@ -244,6 +255,11 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
 
     @Override
     public void onPlayListPrepared(List<Song> songs) {
+
+    }
+
+    @Override
+    public void onAlbumListPrepared(List<Album> albums) {
 
     }
 

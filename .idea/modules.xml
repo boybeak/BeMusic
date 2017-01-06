@@ -5,7 +5,6 @@
       <module fileurl="file://$PROJECT_DIR$/BeMusic.iml" filepath="$PROJECT_DIR$/BeMusic.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/media/media.iml" filepath="$PROJECT_DIR$/media/media.iml" />
-      <module fileurl="file://$PROJECT_DIR$/media/media.iml" filepath="$PROJECT_DIR$/media/media.iml" />
     </modules>
   </component>
 </project>

@@ -9,7 +9,7 @@
     <style name="PlayDetailTheme" parent="AbsPlayDetailTheme">
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
-    <style name="TransitionStyle">
-        <item name="android:transitionName">thumb</item>
+    <style name="ThumbTransitionStyle">
+        <item name="android:transitionName">@string/translation_thumb</item>
     </style>
 </resources>

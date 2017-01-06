@@ -20,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.Toolbar;
+import android.util.Pair;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,16 +30,20 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.nulldreams.bemusic.R;
+import com.nulldreams.bemusic.fragment.AlbumListFragment;
 import com.nulldreams.bemusic.fragment.RvFragment;
 import com.nulldreams.bemusic.fragment.SongListFragment;
 import com.nulldreams.media.manager.PlayManager;
 import com.nulldreams.media.manager.ruler.Rule;
+import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 import com.nulldreams.media.service.PlayService;
 import com.nulldreams.bemusic.widget.ProgressBar;
 import com.nulldreams.bemusic.widget.RatioImageView;
+import com.nulldreams.media.utils.MediaUtils;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 
 import jp.wasabeef.glide.transformations.BlurTransformation;
@@ -58,14 +63,14 @@ public class MainActivity extends AppCompatActivity
     private Toolbar mTb;
     private ViewPager mVp;
     private TabLayout mTl;
-    private View mMiniPanel;
+    private View mMiniPanel, mSongInfoLayout;
     private ImageView mMiniThumbIv, mPlayPauseIv, mPreviousIv, mNextIv, mAvatarIv;
     private TextView mMiniTitleTv, mMiniArtistAlbumTv;
     private ProgressBar mMiniPb;
     private NavigationView mNavView;
     private RatioImageView mHeaderCover;
 
-    private int mLength = 1;
+    private int mLength = 2;
     private RvFragment[] mFragmentArray = null;
 
     private View.OnClickListener mClickListener = new View.OnClickListener() {
@@ -100,8 +105,9 @@ public class MainActivity extends AppCompatActivity
     private void showPlayDetail () {
         Intent it = new Intent(this, PlayDetailActivity.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Pair<View, String> thumb = new Pair<View, String>(mMiniThumbIv, getString(R.string.translation_thumb));
             ActivityOptions options = ActivityOptions
-                    .makeSceneTransitionAnimation(this, mMiniThumbIv, "thumb");
+                    .makeSceneTransitionAnimation(this, thumb);
             startActivity(it, options.toBundle());
         } else {
             startActivity(it);
@@ -124,6 +130,7 @@ public class MainActivity extends AppCompatActivity
 
         mFragmentArray = new RvFragment[mLength];
         mFragmentArray[0] = new SongListFragment();
+        mFragmentArray[1] = new AlbumListFragment();
 
         mDrawerLayout = (DrawerLayout)findViewById(R.id.main_drawer);
         mCoorLayout = (CoordinatorLayout)findViewById(R.id.main_coordinator_layout);
@@ -133,6 +140,7 @@ public class MainActivity extends AppCompatActivity
 
         mMiniPanel = findViewById(R.id.main_mini_panel);
         mMiniThumbIv = (ImageView)findViewById(R.id.main_mini_thumb);
+        mSongInfoLayout = findViewById(R.id.main_mini_song_info_layout);
         mMiniTitleTv = (TextView)findViewById(R.id.main_mini_title);
         mMiniArtistAlbumTv = (TextView)findViewById(R.id.main_mini_artist_album);
 
@@ -169,6 +177,8 @@ public class MainActivity extends AppCompatActivity
 
         Glide.with(this).load(R.drawable.avatar).asBitmap()
                 .transform(new CropCircleTransformation(this)).into(mAvatarIv);
+
+        MediaUtils.getAlbumList(this);
     }
 
     @Override
@@ -223,6 +233,11 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPlayListPrepared(List<Song> songs) {
+    }
+
+    @Override
+    public void onAlbumListPrepared(List<Album> albums) {
+
     }
 
     @Override
@@ -304,6 +319,11 @@ public class MainActivity extends AppCompatActivity
                         mFragmentArray[0] = new SongListFragment();
                     }
                     return mFragmentArray[0];
+                case 1:
+                    if (mFragmentArray[1] == null) {
+                        mFragmentArray[1] = new AlbumListFragment();
+                    }
+                    return mFragmentArray[1];
             }
             return null;
         }

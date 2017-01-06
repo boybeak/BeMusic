@@ -26,6 +26,6 @@
         <item name="windowMinWidthMajor">65%</item>
         <item name="windowMinWidthMinor">80%</item>
     </style>
-    <style name="TransitionStyle">
+    <style name="ThumbTransitionStyle">
     </style>
 </resources>

@@ -15,6 +15,7 @@ import com.nulldreams.bemusic.adapter.SongDecoration;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.media.manager.PlayManager;
 import com.nulldreams.media.manager.ruler.Rule;
+import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 import com.nulldreams.media.service.PlayService;
 
@@ -115,6 +116,11 @@ public class SongListFragment extends RvFragment
     @Override
     public void onPlayListPrepared(List<Song> songs) {
         setSongList(songs);
+    }
+
+    @Override
+    public void onAlbumListPrepared(List<Album> albums) {
+
     }
 
     @Override

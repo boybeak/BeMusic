@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        style="@style/TransitionStyle"
+        style="@style/ThumbTransitionStyle"
         app:widthRatio="1"
         app:heightRatio="1"
         />
@@ -27,6 +27,7 @@
     </FrameLayout>
 
     <RelativeLayout
+        android:id="@+id/play_detail_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/play_detail_thumb"
@@ -58,7 +59,8 @@
                 android:textColor="@android:color/white"
                 android:textStyle="bold"
                 android:maxLines="1"
-                android:ellipsize="end"/>
+                android:ellipsize="end"
+                />
             <TextView
                 android:id="@+id/play_detail_artist"
                 android:layout_width="match_parent"
@@ -68,7 +70,8 @@
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp"/>
+                android:layout_marginBottom="4dp"
+                />
             <TextView
                 android:id="@+id/play_detail_album"
                 android:layout_width="match_parent"
@@ -103,11 +106,13 @@
                 />
         </RelativeLayout>
         <LinearLayout
+            android:id="@+id/play_detail_controller"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
             android:layout_below="@+id/play_detail_time"
-            android:gravity="center">
+            android:gravity="center"
+            >
             <ImageView
                 android:id="@+id/play_detail_rule_change"
                 android:layout_width="40dp"
