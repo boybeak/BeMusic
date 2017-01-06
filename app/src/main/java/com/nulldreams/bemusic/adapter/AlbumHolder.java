@@ -34,21 +34,27 @@ public class AlbumHolder extends AbsViewHolder<AlbumDelegate> {
     }
 
     @Override
-    public void onBindView(Context context, AlbumDelegate albumDelegate, int position, DelegateAdapter adapter) {
+    public void onBindView(Context context, final AlbumDelegate albumDelegate, int position, DelegateAdapter adapter) {
         Album album = albumDelegate.getSource();
         Glide.with(context).load(album.getAlbumArt()).asBitmap().placeholder(R.mipmap.ic_launcher).animate(android.R.anim.fade_in).into(new SimpleTarget<Bitmap>() {
             @Override
             public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
                 thumbIv.setImageBitmap(resource);
-                Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
-                    @Override
-                    public void onGenerated(Palette palette) {
-                        Palette.Swatch swatch = palette.getDarkMutedSwatch();
-                        if (swatch != null) {
-                            infoLayout.setBackgroundColor(swatch.getRgb());
+                if (albumDelegate.getRgb() > 0) {
+                    infoLayout.setBackgroundColor(albumDelegate.getRgb());
+                } else {
+                    Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
+                        @Override
+                        public void onGenerated(Palette palette) {
+                            Palette.Swatch swatch = palette.getDarkMutedSwatch();
+                            if (swatch != null) {
+                                int rgb = swatch.getRgb();
+                                albumDelegate.setRgb(rgb);
+                                infoLayout.setBackgroundColor(rgb);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         });
         titleTv.setText(album.getAlbum());

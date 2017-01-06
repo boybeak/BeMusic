@@ -10,7 +10,18 @@ import com.nulldreams.media.model.Album;
  */
 @DelegateInfo(layoutID = R.layout.layout_album, holderClass = AlbumHolder.class)
 public class AlbumDelegate extends AnnotationDelegate<Album> {
+
+    private int rgb;
+
     public AlbumDelegate(Album album) {
         super(album);
+    }
+
+    public int getRgb() {
+        return rgb;
+    }
+
+    public void setRgb(int rgb) {
+        this.rgb = rgb;
     }
 }
