@@ -22,7 +22,7 @@ import com.nulldreams.media.model.Album;
 public class AlbumHolder extends AbsViewHolder<AlbumDelegate> {
 
     private ImageView thumbIv;
-    private TextView titleTv, artistTv;
+    private TextView titleTv, artistTv, countTv;
     private View infoLayout;
 
     public AlbumHolder(View itemView) {
@@ -30,6 +30,7 @@ public class AlbumHolder extends AbsViewHolder<AlbumDelegate> {
         thumbIv = (ImageView)findViewById(R.id.album_thumb);
         titleTv = (TextView)findViewById(R.id.album_title);
         artistTv = (TextView)findViewById(R.id.album_artist);
+        countTv = (TextView)findViewById(R.id.album_count);
         infoLayout = findViewById(R.id.album_info_layout);
     }
 
@@ -59,5 +60,7 @@ public class AlbumHolder extends AbsViewHolder<AlbumDelegate> {
         });
         titleTv.setText(album.getAlbum());
         artistTv.setText(album.getArtist());
+        int count = album.getNumSongs();
+        countTv.setText(context.getString(count > 1 ? R.string.text_album_songs : R.string.text_album_song, count));
     }
 }

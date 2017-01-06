@@ -4,24 +4,32 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.support.annotation.Nullable;
+import android.support.design.widget.BottomSheetDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.Window;
+import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.animation.GlideAnimation;
+import com.bumptech.glide.request.target.SimpleTarget;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
@@ -47,8 +55,8 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     private View mPanel;
     private SeekBar mSeekBar;
     private Toolbar mToolbar;
-    private RecyclerView mQuickRv;
-    private DelegateAdapter mAdapter;
+    /*private RecyclerView mQuickRv;
+    private DelegateAdapter mAdapter;*/
 
     private View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
@@ -71,17 +79,30 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                     manager.setRule(Rulers.RULER_LIST_LOOP);
                 }
             } else if (id == mPlayListIv.getId()) {
-                if (mQuickRv.getVisibility() == View.VISIBLE) {
+                /*if (mQuickRv.getVisibility() == View.VISIBLE) {
                     hideQuickList();
-                } else {
+                } else {*/
                     showQuickList();
-                }
+//                }
             }
         }
     };
 
     private void showQuickList () {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        RecyclerView rv = new RecyclerView(this);
+        rv.setLayoutManager(new LinearLayoutManager(this));
+        DelegateAdapter adapter = new DelegateAdapter(this);
+        adapter.addAll(PlayManager.getInstance(this).getTotalList(), new DelegateParser<Song>() {
+            @Override
+            public DelegateImpl parse(Song data) {
+                return new SongDelegate(data);
+            }
+        });
+        rv.setAdapter(adapter);
+        dialog.setContentView(rv);
+        dialog.show();
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // get the center for the clipping circle
             int cx = (mQuickRv.getLeft() + mQuickRv.getRight()) / 2;
             int cy = (mQuickRv.getTop() + mQuickRv.getBottom()) / 2;
@@ -98,11 +119,11 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             anim.start();
         } else {
             mQuickRv.setVisibility(View.VISIBLE);
-        }
+        }*/
     }
 
     private void hideQuickList () {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             // get the center for the clipping circle
             int cx = (mQuickRv.getLeft() + mQuickRv.getRight()) / 2;
             int cy = (mQuickRv.getTop() + mQuickRv.getBottom()) / 2;
@@ -129,7 +150,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             anim.start();
         } else {
             mQuickRv.setVisibility(View.GONE);
-        }
+        }*/
     }
 
     private boolean isSeeking = false;
@@ -150,6 +171,8 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             PlayManager.getInstance(seekBar.getContext()).seekTo(seekBar.getProgress());
         }
     };
+
+    private int mLastColor = 0x00000000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -186,7 +209,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mRuleIv = (ImageView)findViewById(R.id.play_detail_rule_change);
         mPlayListIv = (ImageView)findViewById(R.id.play_detail_play_list);
 
-        mQuickRv = (RecyclerView)findViewById(R.id.play_detail_quick_list);
+        /*mQuickRv = (RecyclerView)findViewById(R.id.play_detail_quick_list);
         mQuickRv.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new DelegateAdapter(this);
         List<Song> songs = PlayManager.getInstance(this).getTotalList();
@@ -196,7 +219,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                 return new SongDelegate(data);
             }
         });
-        mQuickRv.setAdapter(mAdapter);
+        mQuickRv.setAdapter(mAdapter);*/
 
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -223,11 +246,30 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
 
     @Override
     public void onBackPressed() {
-        if (mQuickRv.getVisibility() == View.VISIBLE) {
+        /*if (mQuickRv.getVisibility() == View.VISIBLE) {
             hideQuickList();
             return;
-        }
+        }*/
         super.onBackPressed();
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        getMenuInflater().inflate(R.menu.menu_context_play_detail, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_save_cover:
+                break;
+            case R.id.action_share_cover:
+                //Intent it = new Intent(Intent.ACTION_)
+                break;
+            case R.id.action_set_as_wallpaper:
+                break;
+        }
+        return super.onContextItemSelected(item);
     }
 
     @Override
@@ -336,15 +378,42 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             mArtistTv.setText(R.string.text_github_name);
             mAlbumTv.setText(R.string.text_github_name);
             Glide.with(this).load(R.drawable.avatar).animate(android.R.anim.fade_in).into(mThumbIv);
+            unregisterForContextMenu(mThumbIv);
         } else {
             mTitleTv.setText(song.getTitle());
             mArtistTv.setText(song.getArtist());
             mAlbumTv.setText(song.getAlbum());
             File file = song.getCoverFile(this);
             if (file.exists()) {
-                Glide.with(this).load(file).into(mThumbIv);
+                registerForContextMenu(mThumbIv);
+                Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in)
+                        .placeholder(R.mipmap.ic_launcher).into(new SimpleTarget<Bitmap>() {
+                            @Override
+                            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                                mThumbIv.setImageBitmap(resource);
+                                Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
+                                    @Override
+                                    public void onGenerated(Palette palette) {
+                                        Palette.Swatch swatch = palette.getDarkMutedSwatch();
+                                        if (swatch != null) {
+                                            animColor(swatch.getRgb());
+                                        }
+                                    }
+                                });
+                            }
+                        });
             }
         }
 
+    }
+
+    private void animColor (int newColor) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            ObjectAnimator animator = ObjectAnimator.ofArgb(mPanel, "backgroundColor", mLastColor, newColor);
+            animator.start();
+        } else {
+            mPanel.setBackgroundColor (newColor);
+        }
+        mLastColor = newColor;
     }
 }

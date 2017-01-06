@@ -17,7 +17,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
         >
         <TextView
             android:id="@+id/album_title"
@@ -29,6 +32,14 @@
             />
         <TextView
             android:id="@+id/album_artist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textAppearance="@style/TextAppearance.AppCompat.Notification.Info.Media"
+            />
+        <TextView
+            android:id="@+id/album_count"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:maxLines="1"

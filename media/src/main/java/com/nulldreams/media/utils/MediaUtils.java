@@ -45,7 +45,7 @@ public class MediaUtils {
             MediaStore.Audio.Media.IS_MUSIC,
             MediaStore.Audio.Media.IS_NOTIFICATION,
             MediaStore.Audio.Media.MIME_TYPE,
-            MediaStore.Audio.Media.DATA
+            MediaStore.Audio.Media.DATA,
     };
 
     public static final String[] ALBUM_COLUMNS = new String[] {
@@ -58,6 +58,27 @@ public class MediaUtils {
             MediaStore.Audio.Albums.FIRST_YEAR,
             MediaStore.Audio.Albums.LAST_YEAR,
     };
+
+    public static final String[] ARTIST_COLUMNS = new String[] {
+            MediaStore.Audio.Artists._ID,
+            MediaStore.Audio.Artists.ARTIST,
+            MediaStore.Audio.Artists.ARTIST_KEY,
+            MediaStore.Audio.Artists.NUMBER_OF_ALBUMS,
+    };
+
+    public static void getArtistList (Context context) {
+        ContentResolver resolver = context.getContentResolver();
+        Cursor cursor = resolver.query(
+                MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
+                ARTIST_COLUMNS,
+                null,
+                null,
+                null);
+        int count = cursor.getCount();
+        if (count > 0) {
+
+        }
+    }
 
     public static List<Album> getAlbumList (Context context) {
         ContentResolver resolver = context.getContentResolver();
@@ -133,6 +154,8 @@ public class MediaUtils {
         cursor.close();
         return audioList;
     }
+
+
 
     public static String formatTime (int durationInMilliseconds) {
         int seconds = durationInMilliseconds /  1000;
