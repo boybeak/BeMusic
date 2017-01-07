@@ -11,6 +11,7 @@ import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.bemusic.R;
+import com.nulldreams.bemusic.adapter.AlbumDecoration;
 import com.nulldreams.bemusic.adapter.AlbumDelegate;
 import com.nulldreams.media.manager.PlayManager;
 import com.nulldreams.media.manager.ruler.Rule;
@@ -27,10 +28,12 @@ import java.util.List;
 public class AlbumListFragment extends RvFragment implements PlayManager.Callback{
 
     private DelegateAdapter mAdapter;
+    private AlbumDecoration mDecoration;
 
     @Override
     public RecyclerView.LayoutManager getLayoutManager() {
-        return new GridLayoutManager(getContext(), 2);
+        final int columnCount = getContext().getResources().getInteger(R.integer.album_column_count);
+        return new GridLayoutManager(getContext(), columnCount);
     }
 
     @Override
@@ -43,6 +46,8 @@ public class AlbumListFragment extends RvFragment implements PlayManager.Callbac
         super.onViewCreated(view, savedInstanceState);
         mAdapter = new DelegateAdapter(getContext());
         getRecyclerView().setAdapter(mAdapter);
+        mDecoration = new AlbumDecoration(getContext());
+        getRecyclerView().addItemDecoration(mDecoration);
         PlayManager.getInstance(getContext()).registerCallback(this);
         List<Album> albumList = PlayManager.getInstance(getContext()).getAlbumList();
         showAlbums(albumList);
@@ -52,6 +57,7 @@ public class AlbumListFragment extends RvFragment implements PlayManager.Callbac
     public void onDestroyView() {
         super.onDestroyView();
         PlayManager.getInstance(getContext()).unregisterCallback(this);
+        getRecyclerView().removeItemDecoration(mDecoration);
     }
 
     private void showAlbums (List<Album> albums) {

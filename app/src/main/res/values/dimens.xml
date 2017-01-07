@@ -3,6 +3,7 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="song_item_divider_height">4dp</dimen>
+    <dimen name="album_item_offset">8dp</dimen>
 
     <dimen name="detail_toolbar_margin_top">24dp</dimen>
 </resources>

@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetDialog;
@@ -55,8 +56,6 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     private View mPanel;
     private SeekBar mSeekBar;
     private Toolbar mToolbar;
-    /*private RecyclerView mQuickRv;
-    private DelegateAdapter mAdapter;*/
 
     private View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
@@ -79,11 +78,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                     manager.setRule(Rulers.RULER_LIST_LOOP);
                 }
             } else if (id == mPlayListIv.getId()) {
-                /*if (mQuickRv.getVisibility() == View.VISIBLE) {
-                    hideQuickList();
-                } else {*/
-                    showQuickList();
-//                }
+                showQuickList();
             }
         }
     };
@@ -102,55 +97,6 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         rv.setAdapter(adapter);
         dialog.setContentView(rv);
         dialog.show();
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // get the center for the clipping circle
-            int cx = (mQuickRv.getLeft() + mQuickRv.getRight()) / 2;
-            int cy = (mQuickRv.getTop() + mQuickRv.getBottom()) / 2;
-
-            // get the final radius for the clipping circle
-            int finalRadius = Math.max(mQuickRv.getWidth(), mQuickRv.getHeight());
-
-            // create the animator for this view (the start radius is zero)
-            Animator anim =
-                    ViewAnimationUtils.createCircularReveal(mQuickRv, cx, cy, 0, finalRadius);
-
-            // make the view visible and start the animation
-            mQuickRv.setVisibility(View.VISIBLE);
-            anim.start();
-        } else {
-            mQuickRv.setVisibility(View.VISIBLE);
-        }*/
-    }
-
-    private void hideQuickList () {
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            // get the center for the clipping circle
-            int cx = (mQuickRv.getLeft() + mQuickRv.getRight()) / 2;
-            int cy = (mQuickRv.getTop() + mQuickRv.getBottom()) / 2;
-
-            Log.v(TAG, "hideQuickList cx=" + cx + " cy=" + cy);
-
-            // get the initial radius for the clipping circle
-            int initialRadius = mQuickRv.getWidth();
-
-            // create the animation (the final radius is zero)
-            Animator anim =
-                    ViewAnimationUtils.createCircularReveal(mQuickRv, cx, cy, initialRadius, 0);
-
-            // make the view invisible when the animation is done
-            anim.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    mQuickRv.setVisibility(View.INVISIBLE);
-                }
-            });
-
-            // start the animation
-            anim.start();
-        } else {
-            mQuickRv.setVisibility(View.GONE);
-        }*/
     }
 
     private boolean isSeeking = false;
@@ -182,15 +128,6 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_play_detail);
 
-        /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_IMMERSIVE
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-            );
-        }*/
-
         mToolbar = (Toolbar)findViewById(R.id.play_detail_tool_bar);
 
         mTitleTv = (TextView)findViewById(R.id.play_detail_title);
@@ -208,18 +145,6 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mNextIv = (ImageView)findViewById(R.id.play_detail_next);
         mRuleIv = (ImageView)findViewById(R.id.play_detail_rule_change);
         mPlayListIv = (ImageView)findViewById(R.id.play_detail_play_list);
-
-        /*mQuickRv = (RecyclerView)findViewById(R.id.play_detail_quick_list);
-        mQuickRv.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new DelegateAdapter(this);
-        List<Song> songs = PlayManager.getInstance(this).getTotalList();
-        mAdapter.addAll(songs, new DelegateParser<Song>() {
-            @Override
-            public DelegateImpl parse(Song data) {
-                return new SongDelegate(data);
-            }
-        });
-        mQuickRv.setAdapter(mAdapter);*/
 
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -246,10 +171,6 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
 
     @Override
     public void onBackPressed() {
-        /*if (mQuickRv.getVisibility() == View.VISIBLE) {
-            hideQuickList();
-            return;
-        }*/
         super.onBackPressed();
     }
 
@@ -264,7 +185,14 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             case R.id.action_save_cover:
                 break;
             case R.id.action_share_cover:
-                //Intent it = new Intent(Intent.ACTION_)
+                Song song = PlayManager.getInstance(this).getCurrentSong();
+                if (song != null) {
+                    Intent shareIntent = new Intent();
+                    shareIntent.setAction(Intent.ACTION_SEND);
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(song.getCoverFile(this)));
+                    shareIntent.setType("image/jpeg");
+                    startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.title_dialog_send_to)));
+                }
                 break;
             case R.id.action_set_as_wallpaper:
                 break;
@@ -377,12 +305,14 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             mTitleTv.setText(R.string.app_name);
             mArtistTv.setText(R.string.text_github_name);
             mAlbumTv.setText(R.string.text_github_name);
+            mSeekBar.setEnabled(false);
             Glide.with(this).load(R.drawable.avatar).animate(android.R.anim.fade_in).into(mThumbIv);
             unregisterForContextMenu(mThumbIv);
         } else {
             mTitleTv.setText(song.getTitle());
             mArtistTv.setText(song.getArtist());
             mAlbumTv.setText(song.getAlbum());
+            mSeekBar.setEnabled(true);
             File file = song.getCoverFile(this);
             if (file.exists()) {
                 registerForContextMenu(mThumbIv);
@@ -404,7 +334,6 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                         });
             }
         }
-
     }
 
     private void animColor (int newColor) {

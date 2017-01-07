@@ -11,6 +11,8 @@
     <string name="title_menu_context_share_cover">Share Cover</string>
     <string name="title_menu_context_set_wallpaper">Set As Wallpaper</string>
 
+    <string name="title_dialog_send_to">Share To</string>
+
     <string name="text_github_name">boybeak@gmail.com</string>
     <string name="text_album_song">%1$d song</string>
     <string name="text_album_songs">%1$d songs</string>

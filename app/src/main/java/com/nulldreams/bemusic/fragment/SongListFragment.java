@@ -37,12 +37,23 @@ public class SongListFragment extends RvFragment
         }
     };
 
+    private SongDelegate mLastSongDelegate = null;
+
     private DelegateFilter mFilter = new DelegateFilter() {
+
         @Override
         public boolean accept(LayoutImpl impl) {
             if (impl instanceof SongDelegate) {
                 SongDelegate songDelegate = (SongDelegate)impl;
-                return songDelegate.getSource().equals(PlayManager.getInstance(getContext()).getCurrentSong());
+                boolean result = songDelegate.getSource().equals(PlayManager.getInstance(getContext()).getCurrentSong());
+                if (result) {
+                    if (mLastSongDelegate != null) {
+                        mLastSongDelegate.setSelected(false);
+                    }
+                    songDelegate.setSelected(true);
+                    mLastSongDelegate = songDelegate;
+                }
+                return result;
             }
             return false;
         }
