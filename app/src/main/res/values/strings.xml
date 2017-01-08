@@ -10,6 +10,7 @@
     <string name="title_menu_context_save_cover">Save Cover</string>
     <string name="title_menu_context_share_cover">Share Cover</string>
     <string name="title_menu_context_set_wallpaper">Set As Wallpaper</string>
+    <string name="title_menu_context_set_ringtone">Set As Ringtone</string>
 
     <string name="title_dialog_send_to">Share To</string>
 

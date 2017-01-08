@@ -66,7 +66,7 @@ public class MediaUtils {
             MediaStore.Audio.Artists.NUMBER_OF_ALBUMS,
     };
 
-    public static void getArtistList (Context context) {
+    /*public static List<Song> getArtistList (Context context) {
         ContentResolver resolver = context.getContentResolver();
         Cursor cursor = resolver.query(
                 MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
@@ -74,10 +74,18 @@ public class MediaUtils {
                 null,
                 null,
                 null);
-        int count = cursor.getCount();
-        if (count > 0) {
+        return getAudioList(cursor);
+    }*/
 
-        }
+    public static List<Song> getAlbumSongList (Context context, int album_id) {
+        ContentResolver resolver = context.getContentResolver();
+        Cursor cursor = resolver.query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                AUDIO_KEYS,
+                MediaStore.Audio.Media.ALBUM_ID + " = " + album_id,
+                null,
+                null);
+        return getAudioList(cursor);
     }
 
     public static List<Album> getAlbumList (Context context) {
@@ -89,8 +97,9 @@ public class MediaUtils {
                 null,
                 null);
         int count = cursor.getCount();
+        List<Album> albumList = null;
         if (count > 0) {
-            List<Album> albumList = new ArrayList<>();
+            albumList = new ArrayList<>();
             for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
                 int id, minYear, maxYear, numSongs;
                 String album, albumKey, artist, albumArt;
@@ -107,13 +116,14 @@ public class MediaUtils {
                         album, albumKey, artist, albumArt);
                 albumList.add(albumObj);
             }
-            return albumList;
+
         }
-        return null;
+        cursor.close();
+        return albumList;
     }
 
     public static List<Song> getAudioList(Context context) {
-        List<Song> audioList = new ArrayList<Song>();
+
 
         ContentResolver resolver = context.getContentResolver();
         Cursor cursor = resolver.query(
@@ -122,35 +132,43 @@ public class MediaUtils {
                 null,
                 null,
                 null);
+        return getAudioList(cursor);
+    }
 
-        for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
-            Bundle bundle = new Bundle ();
-            for (int i = 0; i < AUDIO_KEYS.length; i++) {
-                final String key = AUDIO_KEYS[i];
-                final int columnIndex = cursor.getColumnIndex(key);
-                final int type = cursor.getType(columnIndex);
-                switch (type) {
-                    case Cursor.FIELD_TYPE_BLOB:
-                        break;
-                    case Cursor.FIELD_TYPE_FLOAT:
-                        float floatValue = cursor.getFloat(columnIndex);
-                        bundle.putFloat(key, floatValue);
-                        break;
-                    case Cursor.FIELD_TYPE_INTEGER:
-                        int intValue = cursor.getInt(columnIndex);
-                        bundle.putInt(key, intValue);
-                        break;
-                    case Cursor.FIELD_TYPE_NULL:
-                        break;
-                    case Cursor.FIELD_TYPE_STRING:
-                        String strValue = cursor.getString(columnIndex);
-                        bundle.putString(key, strValue);
-                        break;
+    private static List<Song> getAudioList (Cursor cursor) {
+        List<Song> audioList = null;
+        if (cursor.getCount() > 0) {
+            audioList = new ArrayList<Song>();
+            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+                Bundle bundle = new Bundle ();
+                for (int i = 0; i < AUDIO_KEYS.length; i++) {
+                    final String key = AUDIO_KEYS[i];
+                    final int columnIndex = cursor.getColumnIndex(key);
+                    final int type = cursor.getType(columnIndex);
+                    switch (type) {
+                        case Cursor.FIELD_TYPE_BLOB:
+                            break;
+                        case Cursor.FIELD_TYPE_FLOAT:
+                            float floatValue = cursor.getFloat(columnIndex);
+                            bundle.putFloat(key, floatValue);
+                            break;
+                        case Cursor.FIELD_TYPE_INTEGER:
+                            int intValue = cursor.getInt(columnIndex);
+                            bundle.putInt(key, intValue);
+                            break;
+                        case Cursor.FIELD_TYPE_NULL:
+                            break;
+                        case Cursor.FIELD_TYPE_STRING:
+                            String strValue = cursor.getString(columnIndex);
+                            bundle.putString(key, strValue);
+                            break;
+                    }
                 }
+                Song audio = new Song(bundle);
+                audioList.add(audio);
             }
-            Song audio = new Song(bundle);
-            audioList.add(audio);
         }
+
         cursor.close();
         return audioList;
     }

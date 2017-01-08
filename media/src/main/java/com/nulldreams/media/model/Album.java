@@ -1,10 +1,12 @@
 package com.nulldreams.media.model;
 
+import java.io.Serializable;
+
 /**
  * Created by boybe on 2017/1/6.
  */
 
-public class Album {
+public class Album implements Serializable{
     private int id, minYear, maxYear, numSongs;
     private String album, albumKey, artist, albumArt;
 

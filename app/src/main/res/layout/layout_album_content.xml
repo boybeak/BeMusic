@@ -5,13 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     >
-    <com.nulldreams.bemusic.widget.RatioImageView
+    <ImageView
         android:id="@+id/album_thumb"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="@dimen/album_item_image_height"
         android:scaleType="centerCrop"
-        app:widthRatio="1"
-        app:heightRatio="1"
         />
     <LinearLayout
         android:id="@+id/album_info_layout"

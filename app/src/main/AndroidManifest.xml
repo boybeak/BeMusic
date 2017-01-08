@@ -19,11 +19,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".activity.PlayDetailActivity"
-            android:theme="@style/PlayDetailTheme"
-            />
+            android:theme="@style/PlayDetailTheme" />
+        <activity android:name=".activity.AlbumActivity"></activity>
     </application>
 
 </manifest>

@@ -12,4 +12,8 @@
         android:id="@+id/action_set_as_wallpaper"
         android:title="@string/title_menu_context_set_wallpaper"
         />
+    <item
+        android:id="@+id/action_set_as_ringtone"
+        android:title="@string/title_menu_context_set_ringtone"
+        />
 </menu>
