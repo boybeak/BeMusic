@@ -22,7 +22,8 @@
         <activity
             android:name=".activity.PlayDetailActivity"
             android:theme="@style/PlayDetailTheme" />
-        <activity android:name=".activity.AlbumActivity"></activity>
+        <activity android:name=".activity.AlbumActivity"
+            android:theme="@style/AlbumTheme"/>
     </application>
 
 </manifest>

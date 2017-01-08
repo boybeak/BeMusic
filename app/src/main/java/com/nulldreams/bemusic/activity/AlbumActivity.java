@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
@@ -39,12 +40,17 @@ public class AlbumActivity extends AppCompatActivity {
         mAlbum = (Album)getIntent().getSerializableExtra("album");
 
         mColTbLayout = (CollapsingToolbarLayout)findViewById(R.id.album_col_toolbar_layout);
+        mTb = (Toolbar)findViewById(R.id.album_toolbar);
         mThumbIv = (ImageView)findViewById(R.id.album_thumb);
         mRv = (RecyclerView)findViewById(R.id.album_rv);
         mRv.setLayoutManager(new LinearLayoutManager(this));
 
         mAdapter = new DelegateAdapter(this);
         mRv.setAdapter(mAdapter);
+
+        setSupportActionBar(mTb);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         mColTbLayout.setTitle(mAlbum.getAlbum());
         Glide.with(this).load(mAlbum.getAlbumArt()).into(mThumbIv);
@@ -59,5 +65,15 @@ public class AlbumActivity extends AppCompatActivity {
             });
             mAdapter.notifyDataSetChanged();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        final int id = item.getItemId();
+        if (id == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

@@ -7,4 +7,7 @@
     <style name="PlayDetailTheme" parent="AbsPlayDetailTheme">
         <item name="android:windowTranslucentStatus">true</item>
     </style>
+    <style name="AlbumTheme" parent="AppTheme">
+        <item name="android:windowTranslucentStatus">true</item>
+    </style>
 </resources>

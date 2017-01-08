@@ -12,6 +12,10 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="AbsTheme">
     </style>
+    <style name="collapsedTitleTextAppearance" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
+        <item name="android:textColorPrimary">@color/colorIcon</item>
+        <item name="android:textColor">@color/colorIcon</item>
+    </style>
     <style name="ToolbarTheme">
         <item name="android:textColorPrimary">@color/colorIcon</item>
         <item name="android:textColorSecondary">@color/colorIcon</item>
@@ -19,6 +23,8 @@
     <style name="AbsPlayDetailTheme" parent="AppTheme">
     </style>
     <style name="PlayDetailTheme" parent="AbsPlayDetailTheme">
+    </style>
+    <style name="AlbumTheme" parent="AppTheme">
     </style>
     <style name="QuickDialogTheme" parent="Theme.AppCompat.Dialog.Alert">
         <item name="android:windowBackground">?attr/colorPrimary</item>
