@@ -10,6 +10,7 @@ import com.nulldreams.adapter.AbsViewHolder;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.media.manager.PlayManager;
+import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 import com.nulldreams.media.utils.MediaUtils;
 
@@ -37,9 +38,9 @@ public class SongHolder extends AbsViewHolder<SongDelegate> {
         final Song song = songDelegate.getSource();
         titleTv.setText(song.getTitle());
         artistAlbumTv.setText(song.getArtistAlbum());
-        File file = song.getCoverFile(context);
-        if (file.exists()) {
-            Glide.with(context).load(file).placeholder(R.mipmap.ic_launcher).into(thumbIv);
+        Album album = song.getAlbumObj();
+        if (album != null) {
+            Glide.with(context).load(album.getAlbumArt()).placeholder(R.mipmap.ic_launcher).into(thumbIv);
         } else {
             Glide.with(context).load("").placeholder(R.mipmap.ic_launcher).into(thumbIv);
         }

@@ -17,7 +17,9 @@ public class Song {
     private int id, albumId, artistId, duration, size, year, track;
     private boolean isRingtone, isPodcast, isAlarm, isMusic, isNotification;
 
-    private File mCoverFile;
+    //private File mCoverFile;
+
+    private Album albumObj;
 
     public Song (Bundle bundle) {
         id = bundle.getInt(MediaStore.Audio.Media._ID);
@@ -77,6 +79,34 @@ public class Song {
         return duration;
     }
 
+    public String getTitleKey() {
+        return titleKey;
+    }
+
+    public String getArtistKey() {
+        return artistKey;
+    }
+
+    public String getAlbumKey() {
+        return albumKey;
+    }
+
+    public int getAlbumId() {
+        return albumId;
+    }
+
+    public int getArtistId() {
+        return artistId;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public int getTrack() {
+        return track;
+    }
+
     public int getSize() {
         return size;
     }
@@ -109,14 +139,22 @@ public class Song {
         return false;
     }
 
-    public File getCoverFile (Context context) {
+    /*public File getCoverFile (Context context) {
         if (mCoverFile == null) {
             mCoverFile = new File(context.getExternalCacheDir(), "covers" + File.separator + getTitle() + "_" + getArtist() + "_" + getAlbum() + ".jpg");
         }
         return mCoverFile;
-    }
+    }*/
 
     public String getArtistAlbum () {
         return getArtist() + " - " + getAlbum();
+    }
+
+    public Album getAlbumObj() {
+        return albumObj;
+    }
+
+    public void setAlbumObj(Album albumObj) {
+        this.albumObj = albumObj;
     }
 }

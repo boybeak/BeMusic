@@ -160,8 +160,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     private List<ProgressCallback> mProgressCallbacks;
 
     private Context mContext;
-    private List<Album> mTotalAlbumList = null;
-    private List<Song> mTotalList = null;
+    private List<Album> mTotalAlbumList;
+    private List<Song> mTotalList;
+    private List<Song> mCurrentList;
+    private Album mCurrentAlbum;
     private Song mSong = null;
     private int mState = PlayService.STATE_IDLE;
     private PlayService mService;
@@ -185,36 +187,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 List<Song> songs = MediaUtils.getAudioList(context);
                 mTotalAlbumList = MediaUtils.getAlbumList(context);
                 for (Song song : songs) {
-                    File file = song.getCoverFile(context);
-                    if (file.exists()) {
-                        continue;
-                    }
-                    MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-                    byte[] rawArt;
-                    Bitmap art;
-                    BitmapFactory.Options bfo=new BitmapFactory.Options();
-
-                    mmr.setDataSource(mContext, Uri.parse(song.getPath()));
-                    rawArt = mmr.getEmbeddedPicture();
-
-                    if (null != rawArt) {
-                        art = BitmapFactory.decodeByteArray(rawArt, 0, rawArt.length, bfo);
-                        if (art != null) {
-                            if (!file.getParentFile().exists()) {
-                                file.getParentFile().mkdirs();
-                            }
-                            try {
-                                FileOutputStream outputStream = new FileOutputStream(file);
-                                art.compress(Bitmap.CompressFormat.JPEG, 75, outputStream);
-                                outputStream.flush();
-                                outputStream.close();
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
+                    song.setAlbumObj(getAlbum(song.getAlbumId()));
                 }
                 return songs;
             }
@@ -222,6 +195,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             @Override
             protected void onPostExecute(List<Song> songs) {
                 mTotalList = songs;
+                mCurrentList = mTotalList;
                 /*bindPlayService();
                 startPlayService();*/
                 for (Callback callback : mCallbacks) {
@@ -236,8 +210,25 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         return mTotalList;
     }
 
+    public List<Song> getAlbumSongList (int albumId) {
+        List<Song> songs = MediaUtils.getAlbumSongList(mContext, albumId);
+        for (Song song : songs) {
+            song.setAlbumObj(getAlbum(song.getAlbumId()));
+        }
+        return songs;
+    }
+
     public List<Album> getAlbumList () {
         return mTotalAlbumList;
+    }
+
+    public Album getAlbum (int albumId) {
+        for (Album album : mTotalAlbumList) {
+            if (album.getId() == albumId) {
+                return album;
+            }
+        }
+        return null;
     }
 
     private void bindPlayService () {
@@ -253,6 +244,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     }
     private void stopPlayService () {
         mContext.stopService(new Intent(mContext, PlayService.class));
+    }
+
+    public void dispatch (Album album) {
+        mCurrentList = getAlbumSongList(album.getId());
+        dispatch(mPlayRule.next(mSong, mCurrentList, true));
+        mCurrentAlbum = album;
     }
 
     /**
@@ -272,10 +269,11 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     public void dispatch(final Song song) {
         Log.v(TAG, "dispatch song=" + song);
         Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
+        mCurrentAlbum = null;
         if (mService != null) {
             if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
                 if (song == null && mSong == null) {
-                    Song defaultSong = mPlayRule.next(song, mTotalList, false);
+                    Song defaultSong = mPlayRule.next(song, mCurrentList, false);
                     dispatch(defaultSong);
                 } else if (song.equals(mSong)) {
                     if (mService.isStarted()) {
@@ -332,7 +330,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      * @param isUserAction
      */
     private void next(boolean isUserAction) {
-        dispatch(mPlayRule.next(mSong, mTotalList, isUserAction));
+        dispatch(mPlayRule.next(mSong, mCurrentList, isUserAction));
     }
 
     /**
@@ -343,7 +341,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     }
 
     private void previous (boolean isUserAction) {
-        dispatch(mPlayRule.previous(mSong, mTotalList, isUserAction));
+        dispatch(mPlayRule.previous(mSong, mCurrentList, isUserAction));
     }
 
     /**

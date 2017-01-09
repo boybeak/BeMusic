@@ -48,10 +48,9 @@ public class RatioImageView extends ImageView {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        //int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-        /*int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-        int heightSize = MeasureSpec.getSize(heightMeasureSpec);*/
+        /*int heightSize = MeasureSpec.getSize(heightMeasureSpec);
+        final int size = Math.min(widthSize, heightSize);*/
         int heightSize = widthSize * mHeightRatio / mWidthRatio;
         setMeasuredDimension(widthSize, heightSize);
     }

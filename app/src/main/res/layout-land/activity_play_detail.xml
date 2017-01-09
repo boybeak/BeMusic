@@ -28,7 +28,7 @@
         android:id="@+id/play_detail_panel"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/play_detail_thumb"
+        android:layout_toRightOf="@+id/play_detail_thumb"
         >
         <SeekBar
             android:id="@+id/play_detail_seek_bar"

@@ -17,9 +17,10 @@
             android:layout_height="match_parent"
             android:fitsSystemWindows="true"
             app:contentScrim="?attr/colorPrimary"
+
             app:expandedTitleMarginEnd="64dp"
             app:expandedTitleMarginStart="48dp"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
             app:collapsedTitleTextAppearance="@style/collapsedTitleTextAppearance"
             >
             <ImageView
@@ -47,6 +48,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         />
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/album_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:srcCompat="@drawable/ic_play"

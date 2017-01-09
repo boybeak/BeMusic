@@ -25,6 +25,7 @@ import android.view.ViewAnimationUtils;
 import android.view.Window;
 import android.webkit.WebView;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -146,6 +147,18 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mRuleIv = (ImageView)findViewById(R.id.play_detail_rule_change);
         mPlayListIv = (ImageView)findViewById(R.id.play_detail_play_list);
 
+        final int width = getResources().getDisplayMetrics().widthPixels;
+        final int height = getResources().getDisplayMetrics().heightPixels;
+        final int size = Math.min(width, height);
+        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams)mThumbIv.getLayoutParams();
+        if (params == null) {
+            params = new RelativeLayout.LayoutParams(size, size);
+        } else {
+            params.width = size;
+            params.height = size;
+        }
+        mThumbIv.setLayoutParams(params);
+
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDefaultDisplayHomeAsUpEnabled(true);
@@ -187,9 +200,13 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             case R.id.action_share_cover:
                 Song song = PlayManager.getInstance(this).getCurrentSong();
                 if (song != null) {
+                    Album album = song.getAlbumObj();
+                    if (album == null) {
+                        return true;
+                    }
                     Intent shareIntent = new Intent();
                     shareIntent.setAction(Intent.ACTION_SEND);
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(song.getCoverFile(this)));
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(album.getAlbumArt())));
                     shareIntent.setType("image/jpeg");
                     startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.title_dialog_send_to)));
                 }
@@ -313,25 +330,28 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
             mArtistTv.setText(song.getArtist());
             mAlbumTv.setText(song.getAlbum());
             mSeekBar.setEnabled(true);
-            File file = song.getCoverFile(this);
-            if (file.exists()) {
+            Album album = song.getAlbumObj();
+            if (album == null) {
+                album = PlayManager.getInstance(this).getAlbum(song.getAlbumId());
+            }
+            if (album != null) {
                 registerForContextMenu(mThumbIv);
-                Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in)
+                Glide.with(this).load(album.getAlbumArt()).asBitmap().animate(android.R.anim.fade_in)
                         .placeholder(R.mipmap.ic_launcher).into(new SimpleTarget<Bitmap>() {
+                    @Override
+                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                        mThumbIv.setImageBitmap(resource);
+                        Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
                             @Override
-                            public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                                mThumbIv.setImageBitmap(resource);
-                                Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
-                                    @Override
-                                    public void onGenerated(Palette palette) {
-                                        Palette.Swatch swatch = palette.getDarkMutedSwatch();
-                                        if (swatch != null) {
-                                            animColor(swatch.getRgb());
-                                        }
-                                    }
-                                });
+                            public void onGenerated(Palette palette) {
+                                Palette.Swatch swatch = palette.getDarkMutedSwatch();
+                                if (swatch != null) {
+                                    animColor(swatch.getRgb());
+                                }
                             }
                         });
+                    }
+                });
             }
         }
     }

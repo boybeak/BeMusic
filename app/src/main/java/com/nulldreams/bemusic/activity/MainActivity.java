@@ -278,10 +278,13 @@ public class MainActivity extends AppCompatActivity
         if (song != null) {
             mMiniTitleTv.setText(song.getTitle());
             mMiniArtistAlbumTv.setText(song.getArtistAlbum());
-            File file = song.getCoverFile(this);
-            if (file.exists()) {
-                Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
-                Glide.with(this).load(file).asBitmap().animate(android.R.anim.fade_in).transform(new BlurTransformation(this))
+            Album album = song.getAlbumObj();
+            if (album == null) {
+                album = PlayManager.getInstance(this).getAlbum(song.getAlbumId());
+            }
+            if (album != null) {
+                Glide.with(this).load(album.getAlbumArt()).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
+                Glide.with(this).load(album.getAlbumArt()).asBitmap().animate(android.R.anim.fade_in).transform(new BlurTransformation(this))
                         .into(mHeaderCover);
             }
         } else {

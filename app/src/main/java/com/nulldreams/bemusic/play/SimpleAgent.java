@@ -17,6 +17,7 @@ import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.activity.PlayDetailActivity;
 import com.nulldreams.media.manager.PlayManager;
 import com.nulldreams.media.manager.notification.NotificationAgent;
+import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 import com.nulldreams.media.service.PlayService;
 
@@ -38,10 +39,10 @@ public class SimpleAgent implements NotificationAgent {
         builder.setWhen(System.currentTimeMillis());
         builder.setSmallIcon(android.R.mipmap.sym_def_app_icon);
 
-        File file = song.getCoverFile(context);
+        Album album = song.getAlbumObj();
         mThumbBmp = null;
-        if (file.exists()) {
-            mThumbBmp = BitmapFactory.decodeFile(file.getAbsolutePath());
+        if (album != null) {
+            mThumbBmp = BitmapFactory.decodeFile(album.getAlbumArt());
             builder.setLargeIcon(mThumbBmp);
         } else {
             builder.setLargeIcon(null);
