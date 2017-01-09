@@ -246,11 +246,19 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mContext.stopService(new Intent(mContext, PlayService.class));
     }
 
-    public void dispatch (Album album) {
-        mCurrentList = getAlbumSongList(album.getId());
-        dispatch(mPlayRule.next(mSong, mCurrentList, true));
+    /*public void dispatch (Album album, Song song) {
+        if (album != null) {
+            mCurrentList = getAlbumSongList(album.getId());
+        } else {
+            mCurrentList = mTotalList;
+        }
+        dispatch(song);
         mCurrentAlbum = album;
     }
+
+    public void dispatch (Album album) {
+        dispatch(album, mPlayRule.next(mSong, mCurrentList, true));
+    }*/
 
     /**
      *  dispatch the current song
@@ -269,7 +277,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     public void dispatch(final Song song) {
         Log.v(TAG, "dispatch song=" + song);
         Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
-        mCurrentAlbum = null;
+        //mCurrentAlbum = null;
         if (mService != null) {
             if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
                 if (song == null && mSong == null) {

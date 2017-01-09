@@ -41,7 +41,7 @@ public class AlbumActivity extends AppCompatActivity {
         public void onClick(View v) {
             final int id = v.getId();
             if (id == mFab.getId()) {
-                PlayManager.getInstance(v.getContext()).dispatch(mAlbum);
+                //PlayManager.getInstance(v.getContext()).dispatch(mAlbum);
             }
         }
     };
