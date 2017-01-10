@@ -23,6 +23,7 @@ import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
+import com.nulldreams.media.R;
 import com.nulldreams.media.manager.notification.NotificationAgent;
 import com.nulldreams.media.manager.ruler.Rule;
 import com.nulldreams.media.manager.ruler.Rulers;
@@ -65,6 +66,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             mService = ((PlayService.PlayBinder)service).getService();
             mService.setPlayStateChangeListener(PlayManager.this);
             Log.v(TAG, "onServiceConnected");
+            startRemoteControl();
             dispatch(mSong);
         }
 
@@ -171,6 +173,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     private boolean isPausedByUser = false;
 
     private NotificationAgent mNotifyAgent = null;
+
+    private MediaSessionCompat mMediaSessionCompat;
 
     private PlayManager (Context context) {
         mContext = context;
@@ -380,6 +384,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      * release a playing song
      */
     public void release () {
+        stopRemoteControl();
         mService.releasePlayer();
         unbindPlayService();
         stopPlayService();
@@ -388,7 +393,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mService = null;
     }
 
-    private MediaSessionCompat mMediaSessionCompat;
+    public MediaSessionCompat getMediaSessionCompat () {
+        return mMediaSessionCompat;
+    }
+
     private void startRemoteControl() {
         ComponentName mediaButtonReceiver = new ComponentName(mContext, RemoteControlReceiver.class);
         mMediaSessionCompat = new MediaSessionCompat(mContext, TAG, mediaButtonReceiver, null);
@@ -398,10 +406,49 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         );
         mMediaSessionCompat.setCallback(mSessionCallback);
         mMediaSessionCompat.setActive(true);
+        changeMediaSessionState(PlayService.STATE_IDLE);
     }
 
     private void stopRemoteControl () {
-        mMediaSessionCompat.release();
+        if (mMediaSessionCompat != null) {
+            mMediaSessionCompat.release();
+        }
+    }
+
+    private void changeMediaSessionMetadata (@PlayService.State int state) {
+        if (mMediaSessionCompat == null || !mMediaSessionCompat.isActive()) {
+            return;
+        }
+        final boolean hasSong = mSong != null;
+        String title = hasSong ? mSong.getTitle() : "";
+        String album = hasSong ? mSong.getAlbum() : "";
+        String artist = hasSong ? mSong.getArtist() : "";
+        mMediaSessionCompat.setMetadata(
+                new MediaMetadataCompat.Builder()
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeFile(mSong.getAlbumObj().getAlbumArt()))
+                        .build()
+        );
+        changeMediaSessionState(state);
+    }
+
+    private void changeMediaSessionState(@PlayService.State int state) {
+        if (mMediaSessionCompat == null || !mMediaSessionCompat.isActive()) {
+            return;
+        }
+        final int playState = isPlaying() ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
+        mMediaSessionCompat.setPlaybackState(
+                new PlaybackStateCompat.Builder()
+                        .setState(playState, mService.getPosition(), 0)
+                        .setActions(
+                                PlaybackStateCompat.ACTION_PLAY_PAUSE |
+                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                        )
+                        .build()
+        );
     }
 
     /**
@@ -516,7 +563,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_INITIALIZED:
                 isPausedByUser = false;
-                startRemoteControl();
+                changeMediaSessionMetadata(state);
                 break;
             case PlayService.STATE_PREPARING:
                 isPausedByUser = false;
@@ -527,42 +574,16 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             case PlayService.STATE_STARTED:
                 registerNoisyReceiver();
                 notification(state);
+                changeMediaSessionState(state);
                 startUpdateProgressIfNeed();
                 registerRemoteReceiver();
                 isPausedByUser = false;
-                mMediaSessionCompat.setMetadata(
-                        new MediaMetadataCompat.Builder()
-                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mSong.getTitle())
-                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, mSong.getAlbum())
-                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, mSong.getArtist())
-                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeFile(mSong.getAlbumObj().getAlbumArt()))
-                        .build()
-                );
-                mMediaSessionCompat.setPlaybackState(
-                        new PlaybackStateCompat.Builder()
-                        .setState(PlaybackStateCompat.STATE_PLAYING, mService.getPosition(), 0)
-                        .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                        .build()
-                );
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
                 //releaseAudioFocus();
                 notification(state);
-                mMediaSessionCompat.setMetadata(
-                        new MediaMetadataCompat.Builder()
-                                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mSong.getTitle())
-                                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, mSong.getAlbum())
-                                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, mSong.getArtist())
-                                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeFile(mSong.getAlbumObj().getAlbumArt()))
-                                .build()
-                );
-                mMediaSessionCompat.setPlaybackState(
-                        new PlaybackStateCompat.Builder()
-                                .setState(PlaybackStateCompat.STATE_PAUSED, mService.getPosition(), 0)
-                                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
-                                .build()
-                );
+                changeMediaSessionState(state);
                 break;
             case PlayService.STATE_ERROR:
                 unregisterNoisyReceiver();
@@ -574,12 +595,14 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
                 notification(state);
+                changeMediaSessionState(state);
                 isPausedByUser = false;
                 break;
             case PlayService.STATE_COMPLETED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
                 notification(state);
+                changeMediaSessionState(state);
                 isPausedByUser = false;
                 next(false);
                 break;
@@ -588,7 +611,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 releaseAudioFocus();
                 unregisterRemoteReceiver();
                 isPausedByUser = false;
-                stopRemoteControl();
                 break;
         }
         for (Callback callback : mCallbacks) {
@@ -720,13 +742,13 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
         @Override
         public void onSkipToNext() {
-            super.onSkipToNext();
+            next();
             Log.v(TAG, "mSessionCallback onSkipToNext");
         }
 
         @Override
         public void onSkipToPrevious() {
-            super.onSkipToPrevious();
+            previous();
             Log.v(TAG, "mSessionCallback onSkipToPrevious");
         }
 

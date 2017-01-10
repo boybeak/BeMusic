@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.DrawableRes;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.widget.RemoteViews;
@@ -30,6 +31,21 @@ import java.io.File;
 public class SimpleAgent implements NotificationAgent {
 
     private Bitmap mThumbBmp, mPreviousBmp, mPlayPauseBmp, mNextBmp;
+
+    private NotificationCompat.Builder getBuilderCompat (Context context, PlayManager manager, @PlayService.State int state, Song song) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        builder.setContentTitle(song.getTitle());
+        builder.setContentText(song.getArtistAlbum());
+        builder.setWhen(System.currentTimeMillis());
+        builder.setSmallIcon(android.R.mipmap.sym_def_app_icon);
+        NotificationCompat.MediaStyle mediaStyle = new NotificationCompat.MediaStyle();
+        MediaSessionCompat sessionCompat = manager.getMediaSessionCompat();
+        if (sessionCompat != null) {
+            mediaStyle.setMediaSession(sessionCompat.getSessionToken());
+        }
+        builder.setStyle(mediaStyle);
+        return builder;
+    }
 
     @Override
     public NotificationCompat.Builder getBuilder(Context context, PlayManager manager, @PlayService.State int state, Song song) {
