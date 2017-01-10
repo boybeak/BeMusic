@@ -2,22 +2,24 @@ package com.nulldreams.media.manager;
 
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
-import android.media.MediaMetadataRetriever;
-import android.media.RemoteControlClient;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.RatingCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
@@ -26,15 +28,11 @@ import com.nulldreams.media.manager.ruler.Rule;
 import com.nulldreams.media.manager.ruler.Rulers;
 import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
-import com.nulldreams.media.receiver.LockControlReceiver;
+import com.nulldreams.media.receiver.RemoteControlReceiver;
 import com.nulldreams.media.receiver.SimpleBroadcastReceiver;
 import com.nulldreams.media.service.PlayService;
 import com.nulldreams.media.utils.MediaUtils;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -390,6 +388,22 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mService = null;
     }
 
+    private MediaSessionCompat mMediaSessionCompat;
+    private void startRemoteControl() {
+        ComponentName mediaButtonReceiver = new ComponentName(mContext, RemoteControlReceiver.class);
+        mMediaSessionCompat = new MediaSessionCompat(mContext, TAG, mediaButtonReceiver, null);
+        mMediaSessionCompat.setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
+                MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+        );
+        mMediaSessionCompat.setCallback(mSessionCallback);
+        mMediaSessionCompat.setActive(true);
+    }
+
+    private void stopRemoteControl () {
+        mMediaSessionCompat.release();
+    }
+
     /**
      *
      * @return
@@ -418,42 +432,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      */
     public Song getCurrentSong () {
         return mSong;
-    }
-
-    private ComponentName mEventReceiver = null;
-    private RemoteControlClient mRemoteControlClient = null;
-
-    private void lockScreenControls () {
-        if (mService != null && (mService.isStarted() || mService.isPaused())) {
-            mEventReceiver = new ComponentName(mContext, LockControlReceiver.class);
-            AudioManager audioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
-            audioManager.registerMediaButtonEventReceiver(mEventReceiver);
-            Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
-            mediaButtonIntent.setComponent(mEventReceiver);
-            PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(mContext.getApplicationContext(),
-                    0, mediaButtonIntent, 0);
-
-            mRemoteControlClient = new RemoteControlClient(mediaPendingIntent);
-
-            mRemoteControlClient.editMetadata(true)
-                    .putString(MediaMetadataRetriever.METADATA_KEY_TITLE, mSong.getTitle())
-                    .putString(MediaMetadataRetriever.METADATA_KEY_ARTIST, mSong.getArtist())
-                    .putString(MediaMetadataRetriever.METADATA_KEY_ALBUM, mSong.getAlbum())
-                    ;
-            audioManager.registerRemoteControlClient(mRemoteControlClient);
-        }
-    }
-
-    private void unlockScreenControls () {
-        AudioManager audioManager = (AudioManager)mContext.getSystemService(Context.AUDIO_SERVICE);
-        if (mEventReceiver != null) {
-            audioManager.unregisterMediaButtonEventReceiver(mEventReceiver);
-            mEventReceiver = null;
-        }
-        if (mRemoteControlClient != null) {
-            audioManager.unregisterRemoteControlClient(mRemoteControlClient);
-            mRemoteControlClient = null;
-        }
     }
 
     private int requestAudioFocus () {
@@ -538,6 +516,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_INITIALIZED:
                 isPausedByUser = false;
+                startRemoteControl();
                 break;
             case PlayService.STATE_PREPARING:
                 isPausedByUser = false;
@@ -551,11 +530,39 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 startUpdateProgressIfNeed();
                 registerRemoteReceiver();
                 isPausedByUser = false;
+                mMediaSessionCompat.setMetadata(
+                        new MediaMetadataCompat.Builder()
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mSong.getTitle())
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, mSong.getAlbum())
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, mSong.getArtist())
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeFile(mSong.getAlbumObj().getAlbumArt()))
+                        .build()
+                );
+                mMediaSessionCompat.setPlaybackState(
+                        new PlaybackStateCompat.Builder()
+                        .setState(PlaybackStateCompat.STATE_PLAYING, mService.getPosition(), 0)
+                        .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                        .build()
+                );
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
                 //releaseAudioFocus();
                 notification(state);
+                mMediaSessionCompat.setMetadata(
+                        new MediaMetadataCompat.Builder()
+                                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, mSong.getTitle())
+                                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, mSong.getAlbum())
+                                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, mSong.getArtist())
+                                .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeFile(mSong.getAlbumObj().getAlbumArt()))
+                                .build()
+                );
+                mMediaSessionCompat.setPlaybackState(
+                        new PlaybackStateCompat.Builder()
+                                .setState(PlaybackStateCompat.STATE_PAUSED, mService.getPosition(), 0)
+                                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE)
+                                .build()
+                );
                 break;
             case PlayService.STATE_ERROR:
                 unregisterNoisyReceiver();
@@ -581,6 +588,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 releaseAudioFocus();
                 unregisterRemoteReceiver();
                 isPausedByUser = false;
+                stopRemoteControl();
                 break;
         }
         for (Callback callback : mCallbacks) {
@@ -635,6 +643,129 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         }
 
     }
+
+    private MediaSessionCompat.Callback mSessionCallback = new MediaSessionCompat.Callback() {
+        @Override
+        public void onCommand(String command, Bundle extras, ResultReceiver cb) {
+            super.onCommand(command, extras, cb);
+            Log.v(TAG, "mSessionCallback onCommand command=" + command);
+        }
+
+        @Override
+        public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+            Log.v(TAG, "mSessionCallback onMediaButtonEvent mediaButtonEvent=" + mediaButtonEvent.getAction());
+            return super.onMediaButtonEvent(mediaButtonEvent);
+        }
+
+        @Override
+        public void onPrepare() {
+            super.onPrepare();
+            Log.v(TAG, "mSessionCallback onPrepare");
+        }
+
+        @Override
+        public void onPrepareFromMediaId(String mediaId, Bundle extras) {
+            super.onPrepareFromMediaId(mediaId, extras);
+            Log.v(TAG, "mSessionCallback onPrepareFromMediaId mediaId=" + mediaId);
+        }
+
+        @Override
+        public void onPrepareFromSearch(String query, Bundle extras) {
+            super.onPrepareFromSearch(query, extras);
+            Log.v(TAG, "mSessionCallback onPrepareFromSearch query=" + query);
+        }
+
+        @Override
+        public void onPrepareFromUri(Uri uri, Bundle extras) {
+            super.onPrepareFromUri(uri, extras);
+            Log.v(TAG, "mSessionCallback onPrepareFromUri uri=" + uri.toString());
+        }
+
+        @Override
+        public void onPlay() {
+            super.onPlay();
+            dispatch();
+            Log.v(TAG, "mSessionCallback onPlay");
+        }
+
+        @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            super.onPlayFromMediaId(mediaId, extras);
+            Log.v(TAG, "mSessionCallback onPlayFromMediaId mediaId=" + mediaId);
+        }
+
+        @Override
+        public void onPlayFromSearch(String query, Bundle extras) {
+            super.onPlayFromSearch(query, extras);
+            Log.v(TAG, "mSessionCallback onPlayFromSearch query=" + query);
+        }
+
+        @Override
+        public void onPlayFromUri(Uri uri, Bundle extras) {
+            super.onPlayFromUri(uri, extras);
+            Log.v(TAG, "mSessionCallback onPlayFromUri uri=" + uri.toString());
+        }
+
+        @Override
+        public void onSkipToQueueItem(long id) {
+            super.onSkipToQueueItem(id);
+            Log.v(TAG, "mSessionCallback onSkipToQueueItem id=" + id);
+        }
+
+        @Override
+        public void onPause() {
+            pause(true);
+            Log.v(TAG, "mSessionCallback onPause");
+        }
+
+        @Override
+        public void onSkipToNext() {
+            super.onSkipToNext();
+            Log.v(TAG, "mSessionCallback onSkipToNext");
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            super.onSkipToPrevious();
+            Log.v(TAG, "mSessionCallback onSkipToPrevious");
+        }
+
+        @Override
+        public void onFastForward() {
+            super.onFastForward();
+            Log.v(TAG, "mSessionCallback onFastForward");
+        }
+
+        @Override
+        public void onRewind() {
+            super.onRewind();
+            Log.v(TAG, "mSessionCallback onRewind");
+        }
+
+        @Override
+        public void onStop() {
+            super.onStop();
+            Log.v(TAG, "mSessionCallback onStop");
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            super.onSeekTo(pos);
+            Log.v(TAG, "mSessionCallback onSeekTo pos=" + pos);
+        }
+
+        @Override
+        public void onSetRating(RatingCompat rating) {
+            super.onSetRating(rating);
+            Log.v(TAG, "mSessionCallback onSetRating rating=" + rating.toString());
+        }
+
+        @Override
+        public void onCustomAction(String action, Bundle extras) {
+            super.onCustomAction(action, extras);
+            Log.v(TAG, "mSessionCallback onCustomAction action=" + action);
+        }
+    };
 
     public interface Callback {
         void onPlayListPrepared (List<Song> songs);

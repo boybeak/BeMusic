@@ -1,12 +1,21 @@
 package com.nulldreams.media.service;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ResultReceiver;
 import android.support.annotation.IntDef;
+import android.support.v4.media.RatingCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
+
+import com.nulldreams.media.receiver.RemoteControlReceiver;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
