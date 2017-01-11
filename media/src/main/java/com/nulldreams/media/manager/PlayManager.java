@@ -646,34 +646,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         } else {
             notificationPreLollipop(state);
         }
-
-        /*NotificationManager manager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        if (mLastNotificationId > 0) {
-            mService.stopForeground(true);
-            manager.cancel(mLastNotificationId);
-        }
-        if (state == PlayService.STATE_RELEASED) {
-            Log.v(TAG, "notification RELEASE");
-            return;
-        }
-
-        boolean onGoing = isPlaying();
-        NotificationCompat.Builder builder = mNotifyAgent.getBuilder(mContext, this, state, mSong);
-        if (builder != null) {
-
-            final Notification notification = builder.build();
-
-            int notificationId = mSong.getId();
-            if (onGoing) {
-                mService.startForeground(notificationId, notification);
-            } else {
-                mService.stopForeground(true);
-                manager.notify(notificationId, notification);
-            }
-            mNotifyAgent.afterNotify();
-            mLastNotificationId = notificationId;
-        }*/
     }
 
     private void notificationPreLollipop (@PlayService.State int state) {
