@@ -33,6 +33,7 @@
         android:layout_toRightOf="@+id/song_thumb"
         android:layout_toLeftOf="@+id/song_duration"
         android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
         >
         <TextView
             android:id="@+id/song_title"

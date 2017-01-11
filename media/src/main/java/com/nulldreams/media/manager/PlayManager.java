@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
@@ -23,6 +24,7 @@ import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.nulldreams.media.R;
@@ -36,6 +38,7 @@ import com.nulldreams.media.receiver.SimpleBroadcastReceiver;
 import com.nulldreams.media.service.PlayService;
 import com.nulldreams.media.utils.MediaUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -425,12 +428,24 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         String title = hasSong ? mSong.getTitle() : "";
         String album = hasSong ? mSong.getAlbum() : "";
         String artist = hasSong ? mSong.getArtist() : "";
+        Bitmap bmp = null;
+
+        if (hasSong) {
+            Album albumObj = mSong.getAlbumObj();
+            if (albumObj != null) {
+                String cover = albumObj.getAlbumArt();
+                if (!TextUtils.isEmpty(cover) && new File(cover).exists()) {
+                    bmp = BitmapFactory.decodeFile(mSong.getAlbumObj().getAlbumArt());
+                }
+            }
+
+        }
         mMediaSessionCompat.setMetadata(
                 new MediaMetadataCompat.Builder()
                         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                         .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
                         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
-                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeFile(mSong.getAlbumObj().getAlbumArt()))
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, bmp)
                         .build()
         );
         changeMediaSessionState(state);

@@ -97,6 +97,7 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopForeground(true);
         Log.v(TAG, "onDestroy");
     }
 

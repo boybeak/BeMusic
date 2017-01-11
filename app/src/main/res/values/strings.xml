@@ -17,6 +17,8 @@
     <string name="text_github_name">boybeak@gmail.com</string>
     <string name="text_album_song">%1$d song</string>
     <string name="text_album_songs">%1$d songs</string>
+    <string name="text_album_cover_saved_at">Save at %1$s</string>
+    <string name="text_album_cover_saved_failed">Save Failed</string>
 
     <string name="translation_thumb">thumb</string>
     <string name="translation_title">title</string>

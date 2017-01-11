@@ -1,33 +1,36 @@
 package com.nulldreams.bemusic.activity;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
+import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetDialog;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.graphics.Palette;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewAnimationUtils;
 import android.view.Window;
-import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.animation.GlideAnimation;
@@ -35,6 +38,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
+import com.nulldreams.bemusic.Intents;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.media.manager.PlayManager;
@@ -46,6 +50,8 @@ import com.nulldreams.media.service.PlayService;
 import com.nulldreams.media.utils.MediaUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.List;
 
 public class PlayDetailActivity extends AppCompatActivity implements PlayManager.Callback, PlayManager.ProgressCallback {
@@ -196,6 +202,15 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     public boolean onContextItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_save_cover:
+                Log.v(TAG, "onContextItemSelected action_save_cover");
+                if (PackageManager.PERMISSION_GRANTED !=
+                        ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    Log.v(TAG, "onContextItemSelected action_save_cover check permission");
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 100);
+                } else {
+                    Log.v(TAG, "onContextItemSelected action_save_cover doSave");
+                    saveAlbumCover();
+                }
                 break;
             case R.id.action_share_cover:
                 Song song = PlayManager.getInstance(this).getCurrentSong();
@@ -204,17 +219,68 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                     if (album == null) {
                         return true;
                     }
-                    Intent shareIntent = new Intent();
-                    shareIntent.setAction(Intent.ACTION_SEND);
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(album.getAlbumArt())));
-                    shareIntent.setType("image/jpeg");
-                    startActivity(Intent.createChooser(shareIntent, getResources().getText(R.string.title_dialog_send_to)));
+                    Intents.shareImage(PlayDetailActivity.this, getResources().getString(R.string.title_dialog_send_to), album.getAlbumArt());
                 }
                 break;
             case R.id.action_set_as_wallpaper:
                 break;
+            case R.id.action_set_as_ringtone: {
+                setRingtone();
+                break;
+            }
         }
         return super.onContextItemSelected(item);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Log.v(TAG, "onRequestPermissionsResult " + grantResults[0]);
+        if (requestCode == 100) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                saveAlbumCover();
+            }
+        }
+    }
+
+    private void saveAlbumCover() {
+        Song song = PlayManager.getInstance(this).getCurrentSong();
+        if (song != null) {
+            Album album = song.getAlbumObj();
+            if (album == null) {
+                return;
+            }
+            File source = new File(album.getAlbumArt());
+            if (source.exists()) {
+                try {
+                    File dest = new File (
+                            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                            song.getTitle() + "-" + song.getArtist() + "-" + song.getArtist() + ".jpg");
+                    FileInputStream inputStream = new FileInputStream(source);
+                    FileOutputStream outputStream = new FileOutputStream(dest);
+                    byte[] buffer = new byte[1024];
+                    while (inputStream.read(buffer) != -1) {
+                        outputStream.write(buffer);
+                    }
+                    outputStream.flush();
+                    outputStream.close();
+                    inputStream.close();
+                    Toast.makeText(this, getString(R.string.text_album_cover_saved_at, dest.getAbsolutePath()), Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
+                    Toast.makeText(this, R.string.text_album_cover_saved_failed, Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    private void setRingtone () {
+        Song song = PlayManager.getInstance(this).getCurrentSong();
+        if (song != null) {
+            RingtoneManager.setActualDefaultRingtoneUri(
+                    this,
+                    RingtoneManager.TYPE_RINGTONE,
+                    Uri.fromFile(new File(song.getPath())));
+        }
     }
 
     @Override
@@ -254,6 +320,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     public void onPlayStateChanged(@PlayService.State int state, Song song) {
         switch (state) {
             case PlayService.STATE_INITIALIZED:
+                closeContextMenu();
                 showSong(song);
                 break;
             case PlayService.STATE_STARTED:
@@ -335,23 +402,34 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                 album = PlayManager.getInstance(this).getAlbum(song.getAlbumId());
             }
             if (album != null) {
-                registerForContextMenu(mThumbIv);
-                Glide.with(this).load(album.getAlbumArt()).asBitmap().animate(android.R.anim.fade_in)
-                        .placeholder(R.mipmap.ic_launcher).into(new SimpleTarget<Bitmap>() {
-                    @Override
-                    public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
-                        mThumbIv.setImageBitmap(resource);
-                        Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
-                            @Override
-                            public void onGenerated(Palette palette) {
-                                Palette.Swatch swatch = palette.getDarkMutedSwatch();
-                                if (swatch != null) {
-                                    animColor(swatch.getRgb());
-                                }
-                            }
-                        });
+                String albumArt = album.getAlbumArt();
+                if (!TextUtils.isEmpty(albumArt)) {
+                    File file = new File(albumArt);
+                    if (!TextUtils.isEmpty(albumArt) && file.exists()) {
+                        registerForContextMenu(mThumbIv);
+                    } else {
+                        unregisterForContextMenu(mThumbIv);
                     }
-                });
+                    Glide.with(this).load(albumArt).asBitmap().placeholder(R.mipmap.ic_launcher).animate(android.R.anim.fade_in)
+                            .placeholder(R.mipmap.ic_launcher).into(new SimpleTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(Bitmap resource, GlideAnimation<? super Bitmap> glideAnimation) {
+                            mThumbIv.setImageBitmap(resource);
+                            Palette.from(resource).generate(new Palette.PaletteAsyncListener() {
+                                @Override
+                                public void onGenerated(Palette palette) {
+                                    Palette.Swatch swatch = palette.getDarkMutedSwatch();
+                                    if (swatch != null) {
+                                        animColor(swatch.getRgb());
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
+            } else {
+                Glide.with(this).load(R.drawable.avatar).animate(android.R.anim.fade_in).into(mThumbIv);
+                unregisterForContextMenu(mThumbIv);
             }
         }
     }

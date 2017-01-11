@@ -3,7 +3,6 @@ package com.nulldreams.bemusic.activity;
 import android.app.ActivityOptions;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -29,6 +28,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.nulldreams.bemusic.Intents;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.fragment.AlbumListFragment;
 import com.nulldreams.bemusic.fragment.RvFragment;
@@ -85,6 +85,8 @@ public class MainActivity extends AppCompatActivity
                 PlayManager.getInstance(v.getContext()).previous();
             } else if (id == mNextIv.getId()) {
                 PlayManager.getInstance(v.getContext()).next();
+            } else if (id == mHeaderCover.getId()) {
+                Intents.openUrl(MainActivity.this, "https://github.com/boybeak");
             }
         }
     };
@@ -94,11 +96,11 @@ public class MainActivity extends AppCompatActivity
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             final int id = item.getItemId();
             if (id == R.id.action_github) {
-                Intent it = new Intent(Intent.ACTION_VIEW);
-                it.setData(Uri.parse("https://github.com/boybeak/BeMusic"));
-                startActivity(it);
+                Intents.openUrl(MainActivity.this, "https://github.com/boybeak/BeMusic");
+            } else if (id == R.id.action_star_me) {
+                Intents.viewMyAppOnStore(MainActivity.this);
             }
-            return false;
+            return true;
         }
     };
 //    private PlayDetailFragment mDetailFragment = PlayDetailFragment.newInstance();
@@ -153,6 +155,7 @@ public class MainActivity extends AppCompatActivity
         mNavView = (NavigationView)findViewById(R.id.main_nav);
         mHeaderCover = (RatioImageView)mNavView.getHeaderView(0).findViewById(R.id.header_cover);
         mAvatarIv = (ImageView)mNavView.getHeaderView(0).findViewById(R.id.header_avatar);
+        mHeaderCover.setOnClickListener(mClickListener);
 
         mVp.setAdapter(new VpAdapter(getSupportFragmentManager()));
         mTl.setupWithViewPager(mVp);
@@ -283,7 +286,7 @@ public class MainActivity extends AppCompatActivity
                 album = PlayManager.getInstance(this).getAlbum(song.getAlbumId());
             }
             if (album != null) {
-                Glide.with(this).load(album.getAlbumArt()).asBitmap().animate(android.R.anim.fade_in).into(mMiniThumbIv);
+                Glide.with(this).load(album.getAlbumArt()).asBitmap().placeholder(R.mipmap.ic_launcher).animate(android.R.anim.fade_in).into(mMiniThumbIv);
                 Glide.with(this).load(album.getAlbumArt()).asBitmap().animate(android.R.anim.fade_in).transform(new BlurTransformation(this))
                         .into(mHeaderCover);
             }
