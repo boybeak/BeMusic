@@ -16,6 +16,7 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        CrashHandler.getInstance(this);
         SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), MODE_PRIVATE);
         int id = sharedPreferences.getInt("rule", 0);
         Rule rule = null;
