@@ -11,11 +11,13 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaSessionCompat;
@@ -384,8 +386,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      * release a playing song
      */
     public void release () {
-        stopRemoteControl();
         mService.releasePlayer();
+        stopRemoteControl();
         unbindPlayService();
         stopPlayService();
 
@@ -570,6 +572,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_PREPARED:
                 isPausedByUser = false;
+                mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
                 break;
             case PlayService.STATE_STARTED:
                 registerNoisyReceiver();
@@ -607,9 +610,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 next(false);
                 break;
             case PlayService.STATE_RELEASED:
+                Log.v(TAG, "onStateChanged STATE_RELEASED");
+                notification(state);
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
                 unregisterRemoteReceiver();
+                mNotifyDeleteReceiver.unregister(mContext);
                 isPausedByUser = false;
                 break;
         }
@@ -630,40 +636,63 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         return mNotifyAgent;
     }
 
-    private int mLastNotificationId;
+    //private int mLastNotificationId;
     private void notification (@PlayService.State int state) {
         if (mNotifyAgent == null) {
             return;
         }
-        NotificationManager manager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            notificationLollipop(state);
+        } else {
+            notificationPreLollipop(state);
+        }
+
+        /*NotificationManager manager = (NotificationManager)mContext.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (mLastNotificationId > 0) {
             mService.stopForeground(true);
             manager.cancel(mLastNotificationId);
         }
+        if (state == PlayService.STATE_RELEASED) {
+            Log.v(TAG, "notification RELEASE");
+            return;
+        }
 
         boolean onGoing = isPlaying();
         NotificationCompat.Builder builder = mNotifyAgent.getBuilder(mContext, this, state, mSong);
         if (builder != null) {
-            builder.setOngoing(onGoing);
-            builder.setAutoCancel(!onGoing);
 
             final Notification notification = builder.build();
 
             int notificationId = mSong.getId();
-            Log.v(TAG, "notification onGoing=" + onGoing + " notificationId=" + notificationId);
             if (onGoing) {
                 mService.startForeground(notificationId, notification);
-                mNotifyDeleteReceiver.unregister(mContext);
             } else {
                 mService.stopForeground(true);
                 manager.notify(notificationId, notification);
-                mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
             }
             mNotifyAgent.afterNotify();
             mLastNotificationId = notificationId;
-        }
+        }*/
+    }
 
+    private void notificationPreLollipop (@PlayService.State int state) {
+        if (state == PlayService.STATE_RELEASED) {
+            mService.stopForeground(true);
+            return;
+        }
+        NotificationCompat.Builder builder = mNotifyAgent.getBuilder(mContext, this, state, mSong);
+        mService.startForeground(1, builder.build());
+    }
+
+    private void notificationLollipop (@PlayService.State int state) {
+        NotificationManagerCompat notifyManager = NotificationManagerCompat.from(mContext);
+        if (state == PlayService.STATE_RELEASED) {
+            notifyManager.cancelAll();
+            return;
+        }
+        NotificationCompat.Builder builder = mNotifyAgent.getBuilder(mContext, this, state, mSong);
+        notifyManager.notify(1, builder.build());
     }
 
     private MediaSessionCompat.Callback mSessionCallback = new MediaSessionCompat.Callback() {

@@ -12,6 +12,7 @@ import android.support.annotation.DrawableRes;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
+import android.text.TextUtils;
 import android.widget.RemoteViews;
 
 import com.nulldreams.bemusic.R;
@@ -33,12 +34,40 @@ public class SimpleAgent implements NotificationAgent {
     private Bitmap mThumbBmp, mPreviousBmp, mPlayPauseBmp, mNextBmp;
 
     private NotificationCompat.Builder getBuilderCompat (Context context, PlayManager manager, @PlayService.State int state, Song song) {
+
+        PendingIntent playPauseIt = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PLAY_PAUSE), 0);
+        PendingIntent previousIt = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PREVIOUS), 0);
+        PendingIntent nextIt = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_NEXT), 0);
+        PendingIntent deleteIntent = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_NOTIFICATION_DELETE), 0);
+
+        boolean isPlaying = manager.isPlaying();
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         builder.setContentTitle(song.getTitle());
+        builder.setShowWhen(false);
         builder.setContentText(song.getArtistAlbum());
-        builder.setWhen(System.currentTimeMillis());
-        builder.setSmallIcon(android.R.mipmap.sym_def_app_icon);
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.addAction(R.drawable.ic_skip_previous, "previous", previousIt);
+        builder.addAction(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play, "play pause", playPauseIt);
+        builder.addAction(R.drawable.ic_skip_next, "next", nextIt);
+        Album album = song.getAlbumObj();
+        Bitmap bmp = null;
+        if (album == null || TextUtils.isEmpty(album.getAlbumArt())) {
+            bmp = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
+        } else {
+            bmp = BitmapFactory.decodeFile(album.getAlbumArt());
+        }
+        builder.setLargeIcon(bmp);
         NotificationCompat.MediaStyle mediaStyle = new NotificationCompat.MediaStyle();
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+            builder.setOngoing(true);
+            mediaStyle.setShowCancelButton(true);
+            mediaStyle.setCancelButtonIntent(deleteIntent);
+        } else {
+            builder.setOngoing(isPlaying);
+            builder.setDeleteIntent(deleteIntent);
+        }
+        mediaStyle.setShowActionsInCompactView(0, 1, 2);
         MediaSessionCompat sessionCompat = manager.getMediaSessionCompat();
         if (sessionCompat != null) {
             mediaStyle.setMediaSession(sessionCompat.getSessionToken());
@@ -49,7 +78,7 @@ public class SimpleAgent implements NotificationAgent {
 
     @Override
     public NotificationCompat.Builder getBuilder(Context context, PlayManager manager, @PlayService.State int state, Song song) {
-        final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+        /*final NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         builder.setContentTitle(song.getTitle());
         builder.setContentText(song.getArtistAlbum());
         builder.setWhen(System.currentTimeMillis());
@@ -117,8 +146,8 @@ public class SimpleAgent implements NotificationAgent {
         PendingIntent deleteIntent = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_NOTIFICATION_DELETE), 0);
         builder.setDeleteIntent(deleteIntent);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, new Intent(context, PlayDetailActivity.class), 0);
-        builder.setContentIntent(contentIntent);
-        return builder;
+        builder.setContentIntent(contentIntent);*/
+        return getBuilderCompat(context, manager, state, song);
     }
 
     @Override
