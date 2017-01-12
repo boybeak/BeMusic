@@ -347,6 +347,11 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     }
 
     @Override
+    public void onShutdown() {
+
+    }
+
+    @Override
     public void onPlayRuleChanged(Rule rule) {
         SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();

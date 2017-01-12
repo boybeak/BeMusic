@@ -279,6 +279,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onShutdown() {
+
+    }
+
+    @Override
     public void onPlayRuleChanged(Rule rule) {
 
     }

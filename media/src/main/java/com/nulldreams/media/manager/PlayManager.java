@@ -626,7 +626,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_RELEASED:
                 Log.v(TAG, "onStateChanged STATE_RELEASED");
-                notification(state);
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
                 unregisterRemoteReceiver();
@@ -636,6 +635,16 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         }
         for (Callback callback : mCallbacks) {
             callback.onPlayStateChanged(state, mSong);
+        }
+    }
+
+    @Override
+    public void onShutdown() {
+        mService.stopForeground(true);
+        NotificationManagerCompat notifyManager = NotificationManagerCompat.from(mContext);
+        notifyManager.cancelAll();
+        for (Callback callback : mCallbacks) {
+            callback.onShutdown();
         }
     }
 
@@ -664,20 +673,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     }
 
     private void notificationPreLollipop (@PlayService.State int state) {
-        if (state == PlayService.STATE_RELEASED) {
-            mService.stopForeground(true);
-            return;
-        }
         NotificationCompat.Builder builder = mNotifyAgent.getBuilder(mContext, this, state, mSong);
         mService.startForeground(1, builder.build());
     }
 
     private void notificationLollipop (@PlayService.State int state) {
         NotificationManagerCompat notifyManager = NotificationManagerCompat.from(mContext);
-        if (state == PlayService.STATE_RELEASED) {
-            notifyManager.cancelAll();
-            return;
-        }
         NotificationCompat.Builder builder = mNotifyAgent.getBuilder(mContext, this, state, mSong);
         notifyManager.notify(1, builder.build());
     }
@@ -809,6 +810,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         void onPlayListPrepared (List<Song> songs);
         void onAlbumListPrepared (List<Album> albums);
         void onPlayStateChanged (@PlayService.State int state, Song song);
+        void onShutdown ();
         void onPlayRuleChanged (Rule rule);
     }
 

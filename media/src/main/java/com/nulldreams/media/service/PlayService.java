@@ -96,6 +96,9 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
 
     @Override
     public void onDestroy() {
+        if (mStateListener != null) {
+            mStateListener.onShutdown();
+        }
         super.onDestroy();
         stopForeground(true);
         Log.v(TAG, "onDestroy");
@@ -204,6 +207,7 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
 
     public interface PlayStateChangeListener {
         void onStateChanged (@State int state);
+        void onShutdown ();
     }
 
     public class PlayBinder extends Binder {
