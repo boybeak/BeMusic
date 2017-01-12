@@ -507,9 +507,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 mAfListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
     }
 
-    private int releaseAudioFocus (String tag) {
+    private int releaseAudioFocus () {
         AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-        Log.v(TAG, "releaseAudioFocus by " + tag);
+        Log.v(TAG, "releaseAudioFocus by ");
         return audioManager.abandonAudioFocus(mAfListener);
     }
 
@@ -601,26 +601,26 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
-                releaseAudioFocus("STATE_PAUSED");
+                releaseAudioFocus();
                 notification(state);
                 changeMediaSessionState(state);
                 break;
             case PlayService.STATE_ERROR:
                 unregisterNoisyReceiver();
-                releaseAudioFocus("STATE_ERROR");
+                releaseAudioFocus();
                 notification(state);
                 isPausedByUser = false;
                 break;
             case PlayService.STATE_STOPPED:
                 unregisterNoisyReceiver();
-                releaseAudioFocus("STATE_STOPPED");
+                releaseAudioFocus();
                 notification(state);
                 changeMediaSessionState(state);
                 isPausedByUser = false;
                 break;
             case PlayService.STATE_COMPLETED:
                 unregisterNoisyReceiver();
-                releaseAudioFocus("STATE_COMPLETED");
+                releaseAudioFocus();
                 notification(state);
                 changeMediaSessionState(state);
                 isPausedByUser = false;
@@ -629,7 +629,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             case PlayService.STATE_RELEASED:
                 Log.v(TAG, "onStateChanged STATE_RELEASED");
                 unregisterNoisyReceiver();
-                releaseAudioFocus("STATE_RELEASED");
+                releaseAudioFocus();
                 unregisterRemoteReceiver();
                 mNotifyDeleteReceiver.unregister(mContext);
                 isPausedByUser = false;
