@@ -158,6 +158,11 @@ public class SongListFragment extends RvFragment
     }
 
     @Override
+    public void onShutdown() {
+
+    }
+
+    @Override
     public void onPlayRuleChanged(Rule rule) {
 
     }

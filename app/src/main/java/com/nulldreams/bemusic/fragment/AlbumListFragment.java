@@ -91,6 +91,11 @@ public class AlbumListFragment extends RvFragment implements PlayManager.Callbac
     }
 
     @Override
+    public void onShutdown() {
+
+    }
+
+    @Override
     public void onPlayRuleChanged(Rule rule) {
 
     }
