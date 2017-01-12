@@ -70,7 +70,7 @@ public class AlbumHolder extends AbsViewHolder<AlbumDelegate> {
         titleTv.setText(album.getAlbum());
         artistTv.setText(album.getArtist());
         int count = album.getNumSongs();
-        countTv.setText(context.getString(count > 1 ? R.string.text_album_songs : R.string.text_album_song, count));
+        countTv.setText(context.getResources().getQuantityString(R.plurals.text_album_song_count, count, count));
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

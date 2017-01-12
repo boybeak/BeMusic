@@ -15,10 +15,24 @@
     <string name="title_dialog_send_to">Share To</string>
 
     <string name="text_github_name">boybeak@gmail.com</string>
-    <string name="text_album_song">%1$d song</string>
-    <string name="text_album_songs">%1$d songs</string>
+
+    <plurals name="text_album_song_count">
+        <item quantity="zero">no songs</item>
+        <item quantity="one">%d song</item>
+        <item quantity="other">%d songs</item>
+    </plurals>
+
     <string name="text_album_cover_saved_at">Save at %1$s</string>
     <string name="text_album_cover_saved_failed">Save Failed</string>
+    <!--<string name="text_help">help</string>-->
+    <string name="text_help">
+        This is a demo app for show you how to build a music player with MediaPlayer.\n
+        This project\'s source code:https://github.com/boybeak/BeMusic\n
+        Also use some other open source project.\n
+        DelegateAdapter:https://github.com/boybeak/DelegateAdapter\n
+        Glide:https://github.com/bumptech/glide\n
+        glide-transformations:https://github.com/wasabeef/glide-transformations
+    </string>
 
     <string name="translation_thumb">thumb</string>
     <string name="translation_title">title</string>

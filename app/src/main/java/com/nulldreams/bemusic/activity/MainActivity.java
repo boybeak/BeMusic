@@ -15,6 +15,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
@@ -99,7 +100,12 @@ public class MainActivity extends AppCompatActivity
                 Intents.openUrl(MainActivity.this, "https://github.com/boybeak/BeMusic");
             } else if (id == R.id.action_star_me) {
                 Intents.viewMyAppOnStore(MainActivity.this);
+            } else if (id == R.id.action_help) {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setMessage(R.string.text_help)
+                        .show();
             }
+            mDrawerLayout.closeDrawers();
             return true;
         }
     };
