@@ -129,7 +129,7 @@ public class MediaUtils {
         Cursor cursor = resolver.query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 AUDIO_KEYS,
-                null,
+                MediaStore.Audio.Media.IS_MUSIC + "=" + 1,
                 null,
                 null);
         return getAudioList(cursor);

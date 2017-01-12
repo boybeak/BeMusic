@@ -127,7 +127,7 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
     }
 
     public void startPlayer (String path) {
-        releasePlayer();
+        //releasePlayer();
         ensurePlayer();
         try {
             mPlayer.setDataSource(path);
