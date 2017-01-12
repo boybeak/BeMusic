@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Pair;
 import android.view.MenuItem;
@@ -104,10 +105,16 @@ public class MainActivity extends AppCompatActivity
                 Intents.viewMyAppOnStore(MainActivity.this);
             } else if (id == R.id.action_help) {
                 final String message = getString(R.string.text_help);
-                final SpannableString s = new SpannableString(message);
-                Linkify.addLinks(s, Linkify.WEB_URLS);
+                TextView messageTv = new TextView(MainActivity.this);
+                final int padding = (int)(getResources().getDisplayMetrics().density * 24);
+                messageTv.setPadding(padding, padding, padding, padding);
+                messageTv.setAutoLinkMask(Linkify.WEB_URLS);
+                messageTv.setText(message);
+
                 new AlertDialog.Builder(MainActivity.this)
-                        .setMessage(s)
+                        .setTitle(R.string.title_menu_help)
+                        .setView(messageTv)
+                        .setPositiveButton(android.R.string.ok, null)
                         .show();
             }
             mDrawerLayout.closeDrawers();
