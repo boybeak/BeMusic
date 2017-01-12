@@ -20,6 +20,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.Toolbar;
+import android.text.SpannableString;
+import android.text.util.Linkify;
 import android.util.Pair;
 import android.view.MenuItem;
 import android.view.View;
@@ -101,8 +103,11 @@ public class MainActivity extends AppCompatActivity
             } else if (id == R.id.action_star_me) {
                 Intents.viewMyAppOnStore(MainActivity.this);
             } else if (id == R.id.action_help) {
+                final String message = getString(R.string.text_help);
+                final SpannableString s = new SpannableString(message);
+                Linkify.addLinks(s, Linkify.WEB_URLS);
                 new AlertDialog.Builder(MainActivity.this)
-                        .setMessage(R.string.text_help)
+                        .setMessage(s)
                         .show();
             }
             mDrawerLayout.closeDrawers();

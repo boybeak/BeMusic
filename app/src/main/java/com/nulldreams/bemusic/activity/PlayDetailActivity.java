@@ -2,10 +2,12 @@ package com.nulldreams.bemusic.activity;
 
 import android.Manifest;
 import android.animation.ObjectAnimator;
+import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -52,6 +54,7 @@ import com.nulldreams.media.utils.MediaUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
 public class PlayDetailActivity extends AppCompatActivity implements PlayManager.Callback, PlayManager.ProgressCallback {
@@ -223,11 +226,11 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                 }
                 break;
             case R.id.action_set_as_wallpaper:
+                setWallpaper();
                 break;
-            case R.id.action_set_as_ringtone: {
+            case R.id.action_set_as_ringtone:
                 setRingtone();
                 break;
-            }
         }
         return super.onContextItemSelected(item);
     }
@@ -280,6 +283,37 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
                     this,
                     RingtoneManager.TYPE_RINGTONE,
                     Uri.fromFile(new File(song.getPath())));
+        }
+    }
+
+    private void setWallpaper () {
+        WallpaperManager manager = WallpaperManager.getInstance(this);
+        boolean canSetWallpaper = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            canSetWallpaper &= manager.isWallpaperSupported();
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            canSetWallpaper &= manager.isSetWallpaperAllowed();
+        }
+        if (canSetWallpaper) {
+            Song song = PlayManager.getInstance(this).getCurrentSong();
+            if (song != null) {
+                Album album = song.getAlbumObj();
+                if (album == null) {
+                    return;
+                }
+                File source = new File(album.getAlbumArt());
+                if (source.exists()) {
+                    Bitmap bmp = BitmapFactory.decodeFile(source.getAbsolutePath());
+                    try {
+                        manager.setBitmap(bmp);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } finally {
+                        bmp.recycle();
+                    }
+                }
+            }
         }
     }
 

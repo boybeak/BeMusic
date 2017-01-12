@@ -390,7 +390,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      */
     public void release () {
         mService.releasePlayer();
-        stopRemoteControl();
         unbindPlayService();
         stopPlayService();
 
@@ -640,6 +639,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     @Override
     public void onShutdown() {
+        stopRemoteControl();
         mService.stopForeground(true);
         NotificationManagerCompat notifyManager = NotificationManagerCompat.from(mContext);
         notifyManager.cancelAll();
