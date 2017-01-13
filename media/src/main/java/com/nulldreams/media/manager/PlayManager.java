@@ -606,7 +606,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
-                releaseAudioFocus();
+                //releaseAudioFocus();
                 notification(state);
                 changeMediaSessionState(state);
                 break;
@@ -647,6 +647,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     @Override
     public void onShutdown() {
+        releaseAudioFocus();
         stopRemoteControl();
         mService.stopForeground(true);
         NotificationManagerCompat notifyManager = NotificationManagerCompat.from(mContext);
