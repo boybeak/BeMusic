@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_song_list">播放列表</string>
+    <string name="title_album_list">专辑</string>
+
+    <string name="title_menu_github">源码</string>
+    <string name="title_menu_star_me">评分</string>
+    <string name="title_menu_help">帮助</string>
+
+    <string name="title_menu_context_save_cover">保存封面</string>
+    <string name="title_menu_context_share_cover">分享壁纸</string>
+    <string name="title_menu_context_set_wallpaper">设为壁纸</string>
+    <string name="title_menu_context_set_ringtone">设为铃声</string>
+
+    <string name="title_dialog_send_to">分享到</string>
+
+    <string name="text_github_name">boybeak@gmail.com</string>
+
+    <plurals name="text_album_song_count">
+        <item quantity="other">%d 首歌曲</item>
+    </plurals>
+
+    <string name="text_album_cover_saved_at">图片保存于: %1$s</string>
+    <string name="text_album_cover_saved_failed">图片保存失败</string>
+    <!--<string name="text_help">help</string>-->
+    <string name="text_help">
+        这是一个音乐播放器的demo应用，展示如何用MediaPlayer构建一个基础的音乐播放器。\n
+        本项目源码地址:https://github.com/boybeak/BeMusic\n
+        同时在项目中使用了其他开源项目.\n
+        DelegateAdapter:https://github.com/boybeak/DelegateAdapter\n
+        Glide:https://github.com/bumptech/glide\n
+        glide-transformations:https://github.com/wasabeef/glide-transformations
+    </string>
+
+    <string name="translation_thumb">thumb</string>
+    <string name="translation_title">title</string>
+    <string name="translation_artist_album">artist_album</string>
+</resources>

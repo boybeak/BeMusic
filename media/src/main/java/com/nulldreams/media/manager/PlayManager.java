@@ -70,7 +70,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             mService.setPlayStateChangeListener(PlayManager.this);
             Log.v(TAG, "onServiceConnected");
             startRemoteControl();
-            dispatch(mSong);
+            if (!isPlaying()) {
+                dispatch(mSong);
+            }
         }
 
         @Override
@@ -78,6 +80,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             Log.v(TAG, "onServiceDisconnected " + name);
             mService.setPlayStateChangeListener(null);
             mService = null;
+
+            startPlayService();
+            bindPlayService();
         }
     };
 
