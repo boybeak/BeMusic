@@ -4,6 +4,7 @@ It is a local music player, show you how to use MediaPlayer to make a simple Mus
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/play_detail.png" width="180" height="320"/>
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/album_list.png" width="180" height="320"/>
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/play_list.png" width="180" height="320"/>
+
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/play_detail_land.png" width="180" height="320"/>
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/album_list_land.png" width="180" height="320"/>
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/play_list_land.png" width="180" height="320"/>
