@@ -266,3 +266,14 @@ public class PlayBinder extends Binder {
 
 ### UI与PlayService的中间层——PlayManager
 
+
+
+---------------------------------------------------
+
+###### 参考文章
+
+[MediaPlayer开发者文档](https://developer.android.google.cn/reference/android/media/MediaPlayer.html)
+
+[MediaPlayer API Guides](https://developer.android.google.cn/guide/topics/media/mediaplayer.html#)
+
+[Service开发者文档](https://developer.android.google.cn/reference/android/app/Service.html)
