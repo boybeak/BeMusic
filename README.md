@@ -14,3 +14,4 @@ Play Store地址:
 
 ## Getting Start
 你只需要关心的就是[PlayManager](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/PlayManager.java)这个类，这个类中，已经有了对播放状态对生命周期的维护，同时包括了对AudioFocus,ACTION_AUDIO_BECOMING_NOISY,锁屏等。具体见下图：
+<img src="https://github.com/boybeak/BeMusic/blob/master/app/play_list_land.png" width="737" height="370"/>
