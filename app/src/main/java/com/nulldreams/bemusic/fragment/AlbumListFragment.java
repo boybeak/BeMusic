@@ -13,6 +13,7 @@ import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.AlbumDecoration;
 import com.nulldreams.bemusic.adapter.AlbumDelegate;
+import com.nulldreams.bemusic.adapter.EmptyDelegate;
 import com.nulldreams.media.manager.PlayManager;
 import com.nulldreams.media.manager.ruler.Rule;
 import com.nulldreams.media.model.Album;
@@ -33,7 +34,17 @@ public class AlbumListFragment extends RvFragment implements PlayManager.Callbac
     @Override
     public RecyclerView.LayoutManager getLayoutManager() {
         final int columnCount = getContext().getResources().getInteger(R.integer.album_column_count);
-        return new GridLayoutManager(getContext(), columnCount);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), columnCount);
+        gridLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if (mAdapter.get(position) instanceof EmptyDelegate) {
+                    return columnCount;
+                }
+                return 1;
+            }
+        });
+        return gridLayoutManager;
     }
 
     @Override
@@ -63,7 +74,7 @@ public class AlbumListFragment extends RvFragment implements PlayManager.Callbac
     private void showAlbums (List<Album> albums) {
         mAdapter.clear();
         if (albums == null || albums.isEmpty()) {
-
+            mAdapter.add(new EmptyDelegate(getContext(), R.string.text_empty_msg_albums));
         } else {
             mAdapter.addAll(albums, new DelegateParser<Album>() {
                 @Override

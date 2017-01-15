@@ -35,4 +35,6 @@
     <string name="translation_thumb">thumb</string>
     <string name="translation_title">title</string>
     <string name="translation_artist_album">artist_album</string>
+    <string name="text_empty_msg_songs">未发现设备中的歌曲</string>
+    <string name="text_empty_msg_albums">未发现设备中的专辑</string>
 </resources>

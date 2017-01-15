@@ -196,8 +196,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 Context context = params[0];
                 List<Song> songs = MediaUtils.getAudioList(context);
                 mTotalAlbumList = MediaUtils.getAlbumList(context);
-                for (Song song : songs) {
-                    song.setAlbumObj(getAlbum(song.getAlbumId()));
+                if (songs != null) {
+                    for (Song song : songs) {
+                        song.setAlbumObj(getAlbum(song.getAlbumId()));
+                    }
                 }
                 return songs;
             }
@@ -287,6 +289,9 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     public void dispatch(final Song song) {
         Log.v(TAG, "dispatch song=" + song);
         Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
+        if (mCurrentList == null || mCurrentList.isEmpty()) {
+            return;
+        }
         //mCurrentAlbum = null;
         if (mService != null) {
             if (song == null && mSong == null) {

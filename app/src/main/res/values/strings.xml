@@ -15,7 +15,8 @@
     <string name="title_dialog_send_to">Share To</string>
 
     <string name="text_github_name">boybeak@gmail.com</string>
-
+    <string name="text_empty_msg_songs">No songs found in this device</string>
+    <string name="text_empty_msg_albums">No albums found in this device</string>
     <plurals name="text_album_song_count">
         <item quantity="zero">no songs</item>
         <item quantity="one">%d song</item>

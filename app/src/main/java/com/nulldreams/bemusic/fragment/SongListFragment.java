@@ -11,6 +11,7 @@ import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
+import com.nulldreams.bemusic.adapter.EmptyDelegate;
 import com.nulldreams.bemusic.adapter.SongDecoration;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.media.manager.PlayManager;
@@ -67,9 +68,7 @@ public class SongListFragment extends RvFragment
         mSongDecoration = new SongDecoration(getContext());
         getRecyclerView().addItemDecoration(mSongDecoration);
         List<Song> songs = PlayManager.getInstance(getContext()).getTotalList();
-        if (songs != null) {
-            setSongList(songs);
-        }
+        setSongList(songs);
     }
 
     @Override
@@ -114,12 +113,17 @@ public class SongListFragment extends RvFragment
 
     public void setSongList (List<Song> songList) {
         getAdapter().clear();
-        getAdapter().addAll(songList, new DelegateParser<Song>() {
-            @Override
-            public DelegateImpl parse(Song data) {
-                return new SongDelegate(data);
-            }
-        });
+        if (songList != null && !songList.isEmpty()) {
+            getAdapter().addAll(songList, new DelegateParser<Song>() {
+                @Override
+                public DelegateImpl parse(Song data) {
+                    return new SongDelegate(data);
+                }
+            });
+        } else {
+            getAdapter().add(new EmptyDelegate(getContext(), R.string.text_empty_msg_songs));
+        }
+
         getAdapter().notifyDataSetChanged();
 
     }
