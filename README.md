@@ -36,3 +36,4 @@ public void previous ();
 public void pause ();
 public void seekTo (int position);
 ```
+[代码解析参见blog.md](https://github.com/boybeak/BeMusic/blob/master/blog.md)
