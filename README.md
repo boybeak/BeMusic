@@ -4,8 +4,9 @@ It is a local music player, show you how to use MediaPlayer to make a simple Mus
 Play Store地址:
 
 <a href="https://play.google.com/store/apps/details?id=com.nulldreams.bemusic">
-<img src="https://github.com/boybeak/BeMusic/blob/master/app/icon_512.png" width="40" height="40"/>
+<img src="https://github.com/boybeak/BeMusic/blob/master/app/en_badge_web_generic.png" width="161" height="62"/>
 <a/>
+
 [BePlayer](https://play.google.com/store/apps/details?id=com.nulldreams.bemusic)
 
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/play_detail.png" width="180" height="320"/>
