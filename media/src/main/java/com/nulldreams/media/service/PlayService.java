@@ -10,9 +10,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.support.annotation.IntDef;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.RatingCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.nulldreams.media.receiver.RemoteControlReceiver;
@@ -101,6 +103,7 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
         }
         super.onDestroy();
         stopForeground(true);
+        NotificationManagerCompat.from(this).cancelAll();
         Log.v(TAG, "onDestroy");
     }
 

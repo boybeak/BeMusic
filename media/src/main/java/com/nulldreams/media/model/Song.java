@@ -1,10 +1,7 @@
 package com.nulldreams.media.model;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.provider.MediaStore;
-
-import java.io.File;
 
 /**
  * Created by boybe on 2016/12/26.
@@ -27,7 +24,6 @@ public class Song {
         titleKey = bundle.getString(MediaStore.Audio.Media.TITLE_KEY);
         artist = bundle.getString(MediaStore.Audio.Media.ARTIST);
         artistKey = bundle.getString(MediaStore.Audio.Media.ARTIST_KEY);
-        //mComposer = bundle.getString(MediaStore.Audio.Media.COMPOSER);
         album = bundle.getString(MediaStore.Audio.Media.ALBUM);
         albumKey = bundle.getString(MediaStore.Audio.Media.ALBUM_KEY);
         displayName = bundle.getString(MediaStore.Audio.Media.DISPLAY_NAME);
