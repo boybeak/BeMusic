@@ -2,6 +2,10 @@
 It is a local music player, show you how to use MediaPlayer to make a simple MusicPlayer.
 
 Play Store地址:
+
+<a href="https://play.google.com/store/apps/details?id=com.nulldreams.bemusic">
+<img src="https://github.com/boybeak/BeMusic/blob/master/app/icon_512.png" width="40" height="40"/>
+<a/>
 [BePlayer](https://play.google.com/store/apps/details?id=com.nulldreams.bemusic)
 
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/play_detail.png" width="180" height="320"/>
@@ -15,3 +19,19 @@ Play Store地址:
 ## Getting Start
 你只需要关心的就是[PlayManager](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/PlayManager.java)这个类，这个类中，已经有了对播放状态对生命周期的维护，同时包括了对AudioFocus,ACTION_AUDIO_BECOMING_NOISY,锁屏等。具体见下图：
 <img src="https://github.com/boybeak/BeMusic/blob/master/app/img.jpeg" width="737" height="370"/>
+
+####实例化[PlayManager](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/PlayManager.java)
+
+```
+PlayManager.getInstance (context);
+```
+####几个重要的方法
+```
+public void dispatch(final Song song);
+public void dispatch();
+public void setRule (@NonNull Rule rule);
+public void next();
+public void previous ();
+public void pause ();
+public void seekTo (int position);
+```
