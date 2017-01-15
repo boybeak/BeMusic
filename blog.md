@@ -277,3 +277,5 @@ public class PlayBinder extends Binder {
 [MediaPlayer API Guides](https://developer.android.google.cn/guide/topics/media/mediaplayer.html#)
 
 [Service开发者文档](https://developer.android.google.cn/reference/android/app/Service.html)
+
+[Service API Guides](https://developer.android.google.cn/guide/components/services.html)
