@@ -4,17 +4,28 @@
 
 [BePlayer](https://github.com/boybeak/BeMusic)
 
+Demo应用Play Store地址:
+
+<a href="https://play.google.com/store/apps/details?id=com.nulldreams.bemusic">
+<img src="https://github.com/boybeak/BeMusic/blob/master/app/en_badge_web_generic.png" width="161" height="62"/>
+<a/>
+
+[BePlayer](https://play.google.com/store/apps/details?id=com.nulldreams.bemusic)
+
 按照以下顺序介绍如何用MediaPlayer去构建一个基础的本地音乐播放器。
 
 1. 获取本地音乐数据；
 2. 构建PlayService，来执行音乐播放任务；
 3. 构建一个UI与PlayService的中间层——PlayManager，用来处理媒体文件的Playback生命周期；
 4. 在PlayManager中，加入处理意外情况的方式，所谓意外情况，例如耳机拔出、接到电话、其他播放器播放音乐等；
-5. 实现远程控制，例如Notification与锁屏控制；
+5. 实现远程控制与PlayService保活，例如Notification与锁屏控制；
 
 以上是已经实现的部分，以后再逐渐完善的有：
 
 - 桌面Widget播放控件以及控制；
+- 自定义播放列表支持；
+- 视频播放支持；
+- 远端媒体播放支持；
 - 播放的可视化效果；
 - 歌词支持；
 - MediaCodec支持；
@@ -322,7 +333,7 @@ private ServiceConnection mConnection = new ServiceConnection() {
 >
 > 如果您确实允许服务同时具有已启动和绑定状态，则服务启动后，系统“不会”在所有客户端都取消绑定时销毁服务。 为此，您必须通过调用`stopSelf()` 或 `stopService()` 显式停止服务。
 >
-> 尽管您通常应该实现 `onBind()` *或*`onStartCommand()`，但有时需要同时实现这两者。例如，<u>音乐播放器可能发现让其服务无限期运行并同时提供绑定很有用处</u>。 这样一来，Activity 便可启动服务进行音乐播放，即使用户离开应用，音乐播放也不会停止。 然后，当用户返回应用时，Activity 可绑定到服务，重新获得回放控制权。
+> 尽管您通常应该实现 `onBind()` *或*`onStartCommand()`，但有时需要同时实现这两者。例如，**音乐播放器可能发现让其服务无限期运行并同时提供绑定很有用处**。 这样一来，Activity 便可启动服务进行音乐播放，即使用户离开应用，音乐播放也不会停止。 然后，当用户返回应用时，Activity 可绑定到服务，重新获得回放控制权。
 >
 > 请务必阅读[管理绑定服务的生命周期](https://developer.android.google.cn/guide/components/bound-services.html#Lifecycle)部分，详细了解有关为已启动服务添加绑定时该服务的生命周期信息。
 
@@ -456,7 +467,120 @@ private void pause (boolean isPausedByUser) {
 }
 ```
 
+其他相关的用户控制方法，如上一曲，下一曲等：
 
+```java
+/**
+* next song by user action
+*/
+public void next() {
+  next(true);
+}
+
+/**
+* next song triggered by {@link #onStateChanged(int)} and {@link PlayService#STATE_COMPLETED}
+* @param isUserAction
+*/
+private void next(boolean isUserAction) {
+  dispatch(mPlayRule.next(mSong, mCurrentList, isUserAction));
+}
+
+/**
+* previous song by user action
+*/
+public void previous () {
+  previous(true);
+}
+
+private void previous (boolean isUserAction) {
+  dispatch(mPlayRule.previous(mSong, mCurrentList, isUserAction));
+}
+```
+
+其中涉及到的mPlayRule，指上一曲下一曲的规则，例如**单曲循环、列表循环、随机播放**等。库中提供了这样一个接口[Rule](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/ruler/Rule.java)来实现播放规则。
+
+```java
+public interface Rule {
+    Song previous (Song song, List<Song> songList, boolean isUserAction);
+    Song next(Song song, List<Song> songList, boolean isUserAction);
+    void clear ();
+}
+```
+
+同时内置了**单曲循环、列表循环、随机播放**三种播放规则，可以通过[Rulers](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/ruler/Rulers.java)使用这三种规则。
+
+### 处理意外情况的方式
+
+所谓意外状况包括插拔耳机与突然来电，这些处理都可以用一个BroadcastReceiver来处理。只需要这个BroadcastReceiver监听。
+
+```java
+private SimpleBroadcastReceiver mNoisyReceiver = new SimpleBroadcastReceiver() {
+
+  @Override
+  public void onReceive(Context context, Intent intent) {
+    if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+      // Pause the playback
+      pause(false);
+    }
+  }
+};
+private void registerNoisyReceiver () {
+  mNoisyReceiver.register(mContext, new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
+}
+
+private void unregisterNoisyReceiver () {
+  mNoisyReceiver.unregister(mContext);
+}
+```
+
+其中的[SimpleBroadcastReceiver](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/receiver/SimpleBroadcastReceiver.java)简单处理了一下，避免重复注册或者未注册即注销时候产生的崩溃。拔出耳机跟收到来电用这个来处理，就可以了，不需监听拔出耳机和来电，所以说，任何企图获取你电话权限的音乐播放应用，肯定不是为了更好的提供音乐服务，只是为了获取更多隐私。
+
+### 实现远程控制与PlayService保活
+
+#### Notification远程控制与保活
+
+由于安卓系统对于系统资源的一些控制，导致即便是耗时任务放在Service中进行，也不能确保在放置于后台后，能一定存活。这就需要我们使用一些方式确保播放后台一直存活下去。最直接的方式，就是通过Service的startForground方法，去显示一个ONGOING的Notification。
+
+PlayManager中已经做了相关的逻辑处理，不过如果要自定义样式，则需要你设置一个[NotificationAgent](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/notification/NotificationAgent.java)，通过这个接口，返回一个supportV7包中的NotificationCompat.Builder。
+
+```java
+public interface NotificationAgent {
+    /**
+     * custom your notification style
+     * @param context
+     * @param manager
+     * @param state
+     * @param song
+     * @return
+     */
+    NotificationCompat.Builder getBuilder (Context context, PlayManager manager, @PlayService.State int state, Song song);
+
+    /**
+     * you can recycle a bitmap in this method after the notification is already shown
+     */
+    void afterNotify();
+}
+```
+
+具体可以参考示例程序中的[SimpleAgent](https://github.com/boybeak/BeMusic/tree/master/app/src/main/java/com/nulldreams/bemusic/play)类。对于Notification的删除处理，默认的方式是：
+
+Kitkat版本以上（不包括Kitkat），暂停播放后，直接滑动删除，PlayManager就可以释放播放；
+
+Kitkat版本以下（包括Kitkat），右上角显示一个x号，点击直接停止并释放播放。
+
+在[SimpleAgent](https://github.com/boybeak/BeMusic/tree/master/app/src/main/java/com/nulldreams/bemusic/play)中，使用了[MediaStyle](https://developer.android.google.cn/reference/android/support/v7/app/NotificationCompat.MediaStyle.html)能够完美适配各种定制系统，并且配合之后的锁屏控制十分方便。
+
+#### 锁屏控制
+
+锁屏控制的关键类是[MediaSessionCompat](https://developer.android.google.cn/reference/android/support/v4/media/session/MediaSessionCompat.html)，另外还有两个类十分关键[MediaMetadataCompat](https://developer.android.google.cn/reference/android/support/v4/media/MediaMetadataCompat.html)和[PlaybackStateCompat](https://developer.android.google.cn/reference/android/support/v4/media/session/PlaybackStateCompat.html)。
+
+通过[MediaMetadataCompat](https://developer.android.google.cn/reference/android/support/v4/media/MediaMetadataCompat.html)设置锁屏中显示的歌曲信息，例如歌曲名称、歌手名称、专辑、专辑封面等；通过[PlaybackStateCompat](https://developer.android.google.cn/reference/android/support/v4/media/session/PlaybackStateCompat.html)可以设置锁屏的操作，例如上一曲、下一曲、暂停、恢复播放等。
+
+具体使用可以参考[PlayManager](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/PlayManager.java)中的四个方法startRemoteControl、changeMediaSessionMetadata、changeMediaSessionState、stopRemoteControl，以及谷歌教学视频：
+
+YouTube地址:[Media Playback with MediaSessionCompat (Android Development Patterns Ep 4)](https://www.youtube.com/watch?v=FBC1FgWe5X4)
+
+优酷地址:[Media Playback with MediaSessionCompat ](http://v.youku.com/v_show/id_XMTY2NjY0ODQ4NA==.html?spm=a2hzp.8253876.0.0.l2vWcr&f=27790253&from=y1.7-3)
 
 
 
@@ -473,3 +597,11 @@ private void pause (boolean isPausedByUser) {
 [Service API Guides](https://developer.android.google.cn/guide/components/services.html)
 
 [服务绑定](https://developer.android.google.cn/guide/components/bound-services.html#Creating)
+
+[MediaSessionCompat开发者文档](https://developer.android.google.cn/reference/android/support/v4/media/session/MediaSessionCompat.html)
+
+[MediaMetadataCompat开发者文档](https://developer.android.google.cn/reference/android/support/v4/media/MediaMetadataCompat.html)
+
+[PlaybackStateCompat开发者文档](https://developer.android.google.cn/reference/android/support/v4/media/session/PlaybackStateCompat.html)
+
+[Media playback the right way](https://www.youtube.com/watch?v=XQwe30cZffg)
