@@ -9,6 +9,7 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.DrawableRes;
+import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
@@ -41,24 +42,27 @@ public class SimpleAgent implements NotificationAgent {
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, new Intent(context, PlayDetailActivity.class), 0);
 
         boolean isPlaying = manager.isPlaying();
+        MediaSessionCompat sessionCompat = manager.getMediaSessionCompat();
+        MediaDescriptionCompat descriptionCompat = sessionCompat.getController().getMetadata().getDescription();
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
-        builder.setContentTitle(song.getTitle());
+        builder.setContentTitle(descriptionCompat.getTitle());
         builder.setShowWhen(false);
-        builder.setContentText(song.getArtistAlbum());
+        builder.setContentText(descriptionCompat.getSubtitle());
+        builder.setSubText(descriptionCompat.getDescription());
         builder.setSmallIcon(R.drawable.ic_notification_queue_music);
         builder.addAction(R.drawable.ic_skip_previous, "previous", previousIt);
         builder.addAction(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play, "play pause", playPauseIt);
         builder.addAction(R.drawable.ic_skip_next, "next", nextIt);
         builder.setContentIntent(contentIntent);
         Album album = song.getAlbumObj();
-        Bitmap bmp = null;
+        /*Bitmap bmp = null;
         if (album == null || TextUtils.isEmpty(album.getAlbumArt())) {
             bmp = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
         } else {
             bmp = BitmapFactory.decodeFile(album.getAlbumArt());
-        }
-        builder.setLargeIcon(bmp);
+        }*/
+        builder.setLargeIcon(descriptionCompat.getIconBitmap());
         NotificationCompat.MediaStyle mediaStyle = new NotificationCompat.MediaStyle();
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
             builder.setOngoing(true);
@@ -69,7 +73,7 @@ public class SimpleAgent implements NotificationAgent {
             builder.setDeleteIntent(deleteIntent);
         }
         mediaStyle.setShowActionsInCompactView(0, 1, 2);
-        MediaSessionCompat sessionCompat = manager.getMediaSessionCompat();
+
         if (sessionCompat != null) {
             mediaStyle.setMediaSession(sessionCompat.getSessionToken());
         }
