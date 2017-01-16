@@ -541,6 +541,8 @@ private void unregisterNoisyReceiver () {
 
 由于安卓系统对于系统资源的一些控制，导致即便是耗时任务放在Service中进行，也不能确保在放置于后台后，能一定存活。这就需要我们使用一些方式确保播放后台一直存活下去。最直接的方式，就是通过Service的startForground方法，去显示一个ONGOING的Notification。
 
+**需要注意的是，即便是这样做了，也不能100%确定保活，在Nexus设备上测试没有问题，但是在MIUI V8 的小米手机4上，会被杀死，杀死的概率与网易云音乐基本差不多**
+
 PlayManager中已经做了相关的逻辑处理，不过如果要自定义样式，则需要你设置一个[NotificationAgent](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/notification/NotificationAgent.java)，通过这个接口，返回一个supportV7包中的NotificationCompat.Builder。
 
 ```java
