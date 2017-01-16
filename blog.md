@@ -266,6 +266,198 @@ public class PlayBinder extends Binder {
 
 ### UI与PlayService的中间层——PlayManager
 
+我们将其他的播放逻辑放在这个中间层中，例如下一曲，上一曲，播放规则（单曲循环，列表循环，随机播放等）锁屏显示与Notification显示，还有意外情况的处理，例如失去AudioFocus、耳机插拔、收到电话等。
+
+单例化PlayManager
+
+```java
+private static PlayManager sManager = null;
+
+	public synchronized static PlayManager getInstance (Context context) {
+  		if (sManager == null) {
+    	sManager = new PlayManager(context.getApplicationContext());
+  	}
+  	return sManager;
+}
+```
+
+首先我们要在这个中间层[PlayManager](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/manager/PlayManager.java)里获得[PlayService](https://github.com/boybeak/BeMusic/blob/master/media/src/main/java/com/nulldreams/media/service/PlayService.java)的实例:
+
+```java
+private void bindPlayService () {
+    mContext.bindService(new Intent(mContext, PlayService.class), mConnection, Context.BIND_AUTO_CREATE);
+}
+private void startPlayService () {
+  mContext.startService(new Intent(mContext, PlayService.class));
+}
+private ServiceConnection mConnection = new ServiceConnection() {
+  @Override
+  public void onServiceConnected(ComponentName name, IBinder service) {
+    mService = ((PlayService.PlayBinder)service).getService();
+    mService.setPlayStateChangeListener(PlayManager.this);
+    Log.v(TAG, "onServiceConnected");
+    startRemoteControl();
+    if (!isPlaying()) {
+      dispatch(mSong);
+    }
+  }
+
+  @Override
+  public void onServiceDisconnected(ComponentName name) {
+    Log.v(TAG, "onServiceDisconnected " + name);
+    mService.setPlayStateChangeListener(null);
+    mService = null;
+
+    startPlayService();
+    bindPlayService();
+  }
+};
+```
+
+通常与Service交互，有两种方式，startService和bindService，但是这里要startService与bindService同时进行。这两种方式并不矛盾，详细可以参见[绑定服务](https://developer.android.google.cn/guide/components/bound-services.html)中的相关描述。
+
+> ### 绑定到已启动服务
+>
+> 正如[服务](https://developer.android.google.cn/guide/components/services.html)文档中所述，您可以创建同时具有已启动和绑定两种状态的服务。 也就是说，可通过调用 `startService()`启动该服务，让服务无限期运行；此外，还可通过调用 `bindService()` 使客户端绑定到服务。
+>
+> 如果您确实允许服务同时具有已启动和绑定状态，则服务启动后，系统“不会”在所有客户端都取消绑定时销毁服务。 为此，您必须通过调用`stopSelf()` 或 `stopService()` 显式停止服务。
+>
+> 尽管您通常应该实现 `onBind()` *或*`onStartCommand()`，但有时需要同时实现这两者。例如，<u>音乐播放器可能发现让其服务无限期运行并同时提供绑定很有用处</u>。 这样一来，Activity 便可启动服务进行音乐播放，即使用户离开应用，音乐播放也不会停止。 然后，当用户返回应用时，Activity 可绑定到服务，重新获得回放控制权。
+>
+> 请务必阅读[管理绑定服务的生命周期](https://developer.android.google.cn/guide/components/bound-services.html#Lifecycle)部分，详细了解有关为已启动服务添加绑定时该服务的生命周期信息。
+
+其中特别提到了“音乐播放器可能发现让其服务无限期运行并同时提供绑定很有用处”。
+
+获取到了PlayService的实例后，便可以正式开始音乐的播放了。音乐播放的方法在PlayManager中的dispatch中。
+
+```java
+/**
+* dispatch a song.If the song is paused, then resume.If the song is not started, then start it.If the song is playing, then pause it.
+* {@link PlayService#STATE_COMPLETED}
+* @param song the song you want to dispatch, if null, dispatch a song from {@link Rule}.
+* @see Song;
+* @see com.nulldreams.media.manager.ruler.Rule#next(Song, List, boolean);
+*/
+public void dispatch(final Song song) {
+  Log.v(TAG, "dispatch song=" + song);
+  Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
+  if (mCurrentList == null || mCurrentList.isEmpty()) {
+    return;
+  }
+  //mCurrentAlbum = null;
+  if (mService != null) {
+    if (song == null && mSong == null) {
+      Song defaultSong = mPlayRule.next(song, mCurrentList, false);
+      dispatch(defaultSong);
+    } else if (song.equals(mSong)) {
+      if (mService.isStarted()) {
+        //Do really this action by user
+        pause();
+      } else if (mService.isPaused()){
+        resume();
+      } else {
+        mService.releasePlayer();
+        if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
+          mSong = song;
+          mService.startPlayer(song.getPath());
+        }
+      }
+    } else {
+      mService.releasePlayer();
+      if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
+        mSong = song;
+        mService.startPlayer(song.getPath());
+      }
+    }
+
+  } else {
+    Log.v(TAG, "dispatch mService == null");
+    mSong = song;
+    bindPlayService();
+    startPlayService();
+  }
+
+}
+/**
+*  dispatch the current song
+*/
+public void dispatch () {
+  dispatch(mSong);
+}
+```
+
+这个dispatch方法中，会根据播放状态和当前正在进行的歌曲，判断是否开始播放，暂停还是恢复播放。
+
+在这个过程中，还涉及到获取音频焦点AudioFocus，只有当获取到了音频焦点，再开始播放，获取AudioFocus代码如下：
+
+```java
+private int requestAudioFocus () {
+  AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+  Log.v(TAG, "requestAudioFocus by ");
+  return audioManager.requestAudioFocus(
+    mAfListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+}
+
+private int releaseAudioFocus () {
+  AudioManager audioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+  Log.v(TAG, "releaseAudioFocus by ");
+  return audioManager.abandonAudioFocus(mAfListener);
+}
+```
+
+当失去音频焦点的时候，我们可以进行以下处理：
+
+```java
+private AudioManager.OnAudioFocusChangeListener mAfListener = new AudioManager.OnAudioFocusChangeListener() {
+  @Override
+  public void onAudioFocusChange(int focusChange) {
+    Log.v(TAG, "onAudioFocusChange = " + focusChange);
+    if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||
+        focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+      if (isPlaying()) {
+        pause(false);
+      }
+    } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+      if (isPaused() && !isPausedByUser()) {
+        resume();
+      }
+    }
+  }
+};
+```
+
+失去AudioFocus的时候，我们暂停播放；重新获得AudioFocus的时候，判断是否为用户主动暂停，若不是主动暂停，则恢复播放。
+
+```java
+/**
+* resume play
+*/
+public void resume () {
+  if (AudioManager.AUDIOFOCUS_REQUEST_GRANTED == requestAudioFocus()) {
+    mService.resumePlayer();
+  }
+}
+
+/**
+* pause a playing song by user action
+*/
+public void pause () {
+  pause(true);
+}
+
+/**
+* pause a playing song
+* @param isPausedByUser false if triggered by {@link AudioManager#AUDIOFOCUS_LOSS} or
+*                       {@link AudioManager#AUDIOFOCUS_LOSS_TRANSIENT}
+*/
+private void pause (boolean isPausedByUser) {
+  mService.pausePlayer();
+  this.isPausedByUser = isPausedByUser;
+}
+```
+
+
+
 
 
 ---------------------------------------------------
@@ -279,3 +471,5 @@ public class PlayBinder extends Binder {
 [Service开发者文档](https://developer.android.google.cn/reference/android/app/Service.html)
 
 [Service API Guides](https://developer.android.google.cn/guide/components/services.html)
+
+[服务绑定](https://developer.android.google.cn/guide/components/bound-services.html#Creating)
