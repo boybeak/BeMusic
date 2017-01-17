@@ -98,35 +98,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     };
 
-    /*private SimpleBroadcastReceiver mNotifyDeleteReceiver = new SimpleBroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (ACTION_NOTIFICATION_DELETE.equals(intent.getAction())) {
-                release();
-                this.unregister(mContext);
-                Log.v(TAG, "mNotifyDeleteReceiver onReceive " + intent.getAction());
-            }
-        }
-    };
-
-    private SimpleBroadcastReceiver mRemoteReceiver = new SimpleBroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            switch (action) {
-                case ACTION_REMOTE_PREVIOUS:
-                    PlayManager.getInstance(context).previous();
-                    break;
-                case ACTION_REMOTE_PLAY_PAUSE:
-                    PlayManager.getInstance(context).dispatch();
-                    break;
-                case ACTION_REMOTE_NEXT:
-                    PlayManager.getInstance(context).next();
-                    break;
-            }
-        }
-    };*/
-
     private AudioManager.OnAudioFocusChangeListener mAfListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
         public void onAudioFocusChange(int focusChange) {
@@ -583,16 +554,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mNoisyReceiver.unregister(mContext);
     }
 
-    /*private void registerRemoteReceiver () {
-        mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_PREVIOUS));
-        mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_PLAY_PAUSE));
-        mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_NEXT));
-    }*/
-
-    /*private void unregisterRemoteReceiver () {
-        mRemoteReceiver.unregister(mContext);
-    }*/
-
     @Override
     public void onStateChanged(@PlayService.State int state) {
         mState = state;
@@ -609,7 +570,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_PREPARED:
                 isPausedByUser = false;
-                //mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
                 break;
             case PlayService.STATE_STARTED:
                 registerNoisyReceiver();
@@ -617,12 +577,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 setSessionActive(true);
                 changeMediaSessionState(state);
                 startUpdateProgressIfNeed();
-                //registerRemoteReceiver();
                 isPausedByUser = false;
                 break;
             case PlayService.STATE_PAUSED:
                 unregisterNoisyReceiver();
-                //releaseAudioFocus();
                 notification(state);
                 changeMediaSessionState(state);
                 break;
@@ -635,7 +593,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             case PlayService.STATE_STOPPED:
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
-                notification(state);
+                //notification(state);
                 changeMediaSessionState(state);
                 setSessionActive(false);
                 isPausedByUser = false;
@@ -652,8 +610,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 Log.v(TAG, "onStateChanged STATE_RELEASED");
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
-                /*unregisterRemoteReceiver();
-                mNotifyDeleteReceiver.unregister(mContext);*/
                 isPausedByUser = false;
                 break;
         }

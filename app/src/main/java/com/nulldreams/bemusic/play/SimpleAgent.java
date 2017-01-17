@@ -28,10 +28,10 @@ public class SimpleAgent implements NotificationAgent {
 
     private NotificationCompat.Builder getBuilderCompat (Context context, PlayManager manager, @PlayService.State int state, Song song) {
 
-        PendingIntent playPauseIt = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PLAY_PAUSE), 0)*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
-        PendingIntent previousIt = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PREVIOUS), 0)*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS);
-        PendingIntent nextIt = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_NEXT), 0)*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_NEXT);
-        PendingIntent deleteIntent = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_NOTIFICATION_DELETE), 0);*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_STOP);
+        PendingIntent playPauseIt = getActionIntent(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
+        PendingIntent previousIt = getActionIntent(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS);
+        PendingIntent nextIt = getActionIntent(context, KeyEvent.KEYCODE_MEDIA_NEXT);
+        PendingIntent deleteIntent = getActionIntent(context, KeyEvent.KEYCODE_MEDIA_STOP);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, new Intent(context, PlayDetailActivity.class), 0);
 
         boolean isPlaying = manager.isPlaying();
