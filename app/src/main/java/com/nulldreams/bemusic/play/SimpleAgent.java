@@ -10,10 +10,12 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.annotation.DrawableRes;
 import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.nulldreams.bemusic.R;
@@ -26,6 +28,8 @@ import com.nulldreams.media.model.Song;
 import com.nulldreams.media.service.PlayService;
 
 import java.io.File;
+
+import static android.content.ContentValues.TAG;
 
 /**
  * Created by boybe on 2017/1/5.
@@ -43,7 +47,10 @@ public class SimpleAgent implements NotificationAgent {
 
         boolean isPlaying = manager.isPlaying();
         MediaSessionCompat sessionCompat = manager.getMediaSessionCompat();
-        MediaDescriptionCompat descriptionCompat = sessionCompat.getController().getMetadata().getDescription();
+        MediaControllerCompat controllerCompat = sessionCompat.getController();
+        PendingIntent sessionActivity = controllerCompat.getSessionActivity();
+        Log.v(TAG, "getBuilderCompat sessionActivity = " + sessionActivity);
+        MediaDescriptionCompat descriptionCompat = controllerCompat.getMetadata().getDescription();
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
         builder.setContentTitle(descriptionCompat.getTitle());
@@ -55,13 +62,6 @@ public class SimpleAgent implements NotificationAgent {
         builder.addAction(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play, "play pause", playPauseIt);
         builder.addAction(R.drawable.ic_skip_next, "next", nextIt);
         builder.setContentIntent(contentIntent);
-        Album album = song.getAlbumObj();
-        /*Bitmap bmp = null;
-        if (album == null || TextUtils.isEmpty(album.getAlbumArt())) {
-            bmp = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
-        } else {
-            bmp = BitmapFactory.decodeFile(album.getAlbumArt());
-        }*/
         builder.setLargeIcon(descriptionCompat.getIconBitmap());
         NotificationCompat.MediaStyle mediaStyle = new NotificationCompat.MediaStyle();
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
