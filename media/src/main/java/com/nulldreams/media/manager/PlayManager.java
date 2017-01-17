@@ -48,11 +48,11 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     private static final String TAG = PlayManager.class.getSimpleName();
 
-    public static final String
+    /*public static final String
             ACTION_NOTIFICATION_DELETE = "com.nulldreams.music.Action.ACTION_NOTIFICATION_DELETE",
             ACTION_REMOTE_PLAY_PAUSE = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_PLAY_PAUSE",
             ACTION_REMOTE_PREVIOUS = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_PREVIOUS",
-            ACTION_REMOTE_NEXT = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_NEXT";
+            ACTION_REMOTE_NEXT = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_NEXT";*/
 
     private static PlayManager sManager = null;
 
@@ -98,7 +98,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     };
 
-    private SimpleBroadcastReceiver mNotifyDeleteReceiver = new SimpleBroadcastReceiver() {
+    /*private SimpleBroadcastReceiver mNotifyDeleteReceiver = new SimpleBroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (ACTION_NOTIFICATION_DELETE.equals(intent.getAction())) {
@@ -125,7 +125,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                     break;
             }
         }
-    };
+    };*/
 
     private AudioManager.OnAudioFocusChangeListener mAfListener = new AudioManager.OnAudioFocusChangeListener() {
         @Override
@@ -136,6 +136,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 if (isPlaying()) {
                     pause(false);
                 }
+            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+
             } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
                 if (isPaused() && !isPausedByUser()) {
                     resume();
@@ -398,6 +400,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         this.isPausedByUser = isPausedByUser;
     }
 
+    public void stop () {
+        mService.stopPlayer();
+    }
+
     /**
      * release a playing song
      */
@@ -422,8 +428,12 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
         );
         mMediaSessionCompat.setCallback(mSessionCallback);
-        mMediaSessionCompat.setActive(true);
+        setSessionActive(true);
         changeMediaSessionState(PlayService.STATE_IDLE);
+    }
+
+    private void setSessionActive (boolean active) {
+        mMediaSessionCompat.setActive(active);
     }
 
     private void stopRemoteControl () {
@@ -573,15 +583,15 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mNoisyReceiver.unregister(mContext);
     }
 
-    private void registerRemoteReceiver () {
+    /*private void registerRemoteReceiver () {
         mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_PREVIOUS));
         mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_PLAY_PAUSE));
         mRemoteReceiver.register(mContext, new IntentFilter(ACTION_REMOTE_NEXT));
-    }
+    }*/
 
-    private void unregisterRemoteReceiver () {
+    /*private void unregisterRemoteReceiver () {
         mRemoteReceiver.unregister(mContext);
-    }
+    }*/
 
     @Override
     public void onStateChanged(@PlayService.State int state) {
@@ -599,14 +609,15 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 break;
             case PlayService.STATE_PREPARED:
                 isPausedByUser = false;
-                mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
+                //mNotifyDeleteReceiver.register(mContext, new IntentFilter(ACTION_NOTIFICATION_DELETE));
                 break;
             case PlayService.STATE_STARTED:
                 registerNoisyReceiver();
                 notification(state);
+                setSessionActive(true);
                 changeMediaSessionState(state);
                 startUpdateProgressIfNeed();
-                registerRemoteReceiver();
+                //registerRemoteReceiver();
                 isPausedByUser = false;
                 break;
             case PlayService.STATE_PAUSED:
@@ -626,6 +637,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 releaseAudioFocus();
                 notification(state);
                 changeMediaSessionState(state);
+                setSessionActive(false);
                 isPausedByUser = false;
                 break;
             case PlayService.STATE_COMPLETED:
@@ -640,8 +652,8 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
                 Log.v(TAG, "onStateChanged STATE_RELEASED");
                 unregisterNoisyReceiver();
                 releaseAudioFocus();
-                unregisterRemoteReceiver();
-                mNotifyDeleteReceiver.unregister(mContext);
+                /*unregisterRemoteReceiver();
+                mNotifyDeleteReceiver.unregister(mContext);*/
                 isPausedByUser = false;
                 break;
         }

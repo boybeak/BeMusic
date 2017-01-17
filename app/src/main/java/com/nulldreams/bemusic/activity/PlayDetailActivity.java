@@ -184,6 +184,7 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
         mPlayPauseIv.setSelected(PlayManager.getInstance(this).isPlaying());
         onPlayRuleChanged(PlayManager.getInstance(this).getRule());
         showSong(song);
+
     }
 
     @Override

@@ -161,6 +161,13 @@ public class PlayService extends Service implements MediaPlayer.OnInfoListener,
         }
     }
 
+    public void stopPlayer () {
+        if (isStarted() || isPaused()) {
+            mPlayer.stop();
+            setPlayerState(STATE_STOPPED);
+        }
+    }
+
     public void releasePlayer () {
         if (mPlayer != null) {
             mPlayer.release();

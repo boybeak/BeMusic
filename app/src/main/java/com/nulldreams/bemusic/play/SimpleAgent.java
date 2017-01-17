@@ -14,6 +14,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.AppCompatDrawableManager;
 import android.text.TextUtils;
+import android.view.KeyEvent;
 import android.widget.RemoteViews;
 
 import com.nulldreams.bemusic.R;
@@ -35,10 +36,10 @@ public class SimpleAgent implements NotificationAgent {
 
     private NotificationCompat.Builder getBuilderCompat (Context context, PlayManager manager, @PlayService.State int state, Song song) {
 
-        PendingIntent playPauseIt = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PLAY_PAUSE), 0);
-        PendingIntent previousIt = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PREVIOUS), 0);
-        PendingIntent nextIt = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_NEXT), 0);
-        PendingIntent deleteIntent = PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_NOTIFICATION_DELETE), 0);
+        PendingIntent playPauseIt = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PLAY_PAUSE), 0)*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE);
+        PendingIntent previousIt = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_PREVIOUS), 0)*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_PREVIOUS);
+        PendingIntent nextIt = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_REMOTE_NEXT), 0)*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_NEXT);
+        PendingIntent deleteIntent = /*PendingIntent.getBroadcast(context, 0, new Intent(PlayManager.ACTION_NOTIFICATION_DELETE), 0);*/getActionIntent(context, KeyEvent.KEYCODE_MEDIA_STOP);
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0, new Intent(context, PlayDetailActivity.class), 0);
 
         boolean isPlaying = manager.isPlaying();
@@ -55,6 +56,7 @@ public class SimpleAgent implements NotificationAgent {
         builder.addAction(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play, "play pause", playPauseIt);
         builder.addAction(R.drawable.ic_skip_next, "next", nextIt);
         builder.setContentIntent(contentIntent);
+        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         Album album = song.getAlbumObj();
         /*Bitmap bmp = null;
         if (album == null || TextUtils.isEmpty(album.getAlbumArt())) {
@@ -88,6 +90,13 @@ public class SimpleAgent implements NotificationAgent {
 
     @Override
     public void afterNotify() {
+    }
+
+    public static PendingIntent getActionIntent (Context context, int mediaKeyEvent) {
+        Intent it = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        it.setPackage(context.getPackageName());
+        it.putExtra(Intent.EXTRA_KEY_EVENT, new KeyEvent(KeyEvent.ACTION_UP, mediaKeyEvent));
+        return PendingIntent.getBroadcast(context, mediaKeyEvent, it, 0);
     }
 
 }

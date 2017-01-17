@@ -35,6 +35,10 @@ public class RemoteControlReceiver extends BroadcastReceiver {
                 case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
                     PlayManager.getInstance(context).dispatch();
                     break;
+                case KeyEvent.KEYCODE_MEDIA_STOP:
+                    PlayManager.getInstance(context).stop();
+                    PlayManager.getInstance(context).release();
+                    break;
             }
         }
         /*for (String key : set) {
