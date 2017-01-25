@@ -1,6 +1,8 @@
 # BeMusic
 It is a local music player, show you how to use MediaPlayer to make a simple MusicPlayer.
+
 [代码解析参见blog.md](https://github.com/boybeak/BeMusic/blob/master/blog.md)
+
 Play Store地址:
 
 <a href="https://play.google.com/store/apps/details?id=com.nulldreams.bemusic">
