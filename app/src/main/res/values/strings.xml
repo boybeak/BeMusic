@@ -25,6 +25,7 @@
 
     <string name="text_album_cover_saved_at">Save at %1$s</string>
     <string name="text_album_cover_saved_failed">Save Failed</string>
+    <string name="text_permission">Lack of read external storage permission</string>
     <!--<string name="text_help">help</string>-->
     <string name="text_help">
         This is a demo app for show you how to build a music player with MediaPlayer.\n

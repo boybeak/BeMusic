@@ -1,7 +1,11 @@
 package com.nulldreams.bemusic.activity;
 
+import android.Manifest;
 import android.app.ActivityOptions;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -9,9 +13,11 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -39,8 +45,10 @@ import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.fragment.AlbumListFragment;
 import com.nulldreams.bemusic.fragment.RvFragment;
 import com.nulldreams.bemusic.fragment.SongListFragment;
+import com.nulldreams.bemusic.play.SimpleAgent;
 import com.nulldreams.media.manager.PlayManager;
 import com.nulldreams.media.manager.ruler.Rule;
+import com.nulldreams.media.manager.ruler.Rulers;
 import com.nulldreams.media.model.Album;
 import com.nulldreams.media.model.Song;
 import com.nulldreams.media.service.PlayService;
@@ -201,7 +209,53 @@ public class MainActivity extends AppCompatActivity
         Glide.with(this).load(R.drawable.avatar).asBitmap()
                 .transform(new CropCircleTransformation(this)).into(mAvatarIv);
 
-        MediaUtils.getAlbumList(this);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 100);
+        } else {
+            init();
+            MediaUtils.getAlbumList(this);
+        }
+    }
+
+    private void init () {
+        SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), MODE_PRIVATE);
+        int id = sharedPreferences.getInt("rule", 0);
+        Rule rule = null;
+        switch (id) {
+            case 0:
+                rule = Rulers.RULER_LIST_LOOP;
+                break;
+            case 1:
+                rule = Rulers.RULER_SINGLE_LOOP;
+                break;
+            case 2:
+                rule = Rulers.RULER_RANDOM;
+                break;
+        }
+        PlayManager.getInstance(this).setRule(rule);
+        PlayManager.getInstance(this).setNotificationAgent(new SimpleAgent());
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                init();
+                MediaUtils.getAlbumList(this);
+            } else {
+                new AlertDialog.Builder(this)
+                        .setMessage(R.string.text_permission)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                            @Override
+                            public void onDismiss(DialogInterface dialog) {
+                                finish();
+                            }
+                        })
+                        .show();
+            }
+        }
     }
 
     @Override

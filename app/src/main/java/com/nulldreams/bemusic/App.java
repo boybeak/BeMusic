@@ -18,22 +18,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         CrashHandler.getInstance(this);
-        SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), MODE_PRIVATE);
-        int id = sharedPreferences.getInt("rule", 0);
-        Rule rule = null;
-        switch (id) {
-            case 0:
-                rule = Rulers.RULER_LIST_LOOP;
-                break;
-            case 1:
-                rule = Rulers.RULER_SINGLE_LOOP;
-                break;
-            case 2:
-                rule = Rulers.RULER_RANDOM;
-                break;
-        }
-        PlayManager.getInstance(this).setRule(rule);
-        PlayManager.getInstance(this).setNotificationAgent(new SimpleAgent());
+
         if (LeakCanary.isInAnalyzerProcess(this)) {
             return;
         }
