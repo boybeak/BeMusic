@@ -86,4 +86,10 @@ public class AlbumHolder extends AbsViewHolder<AlbumDelegate> {
             }
         });
     }
+
+    @Override
+    public void onViewRecycled(Context context) {
+        super.onViewRecycled(context);
+        Glide.clear(thumbIv);
+    }
 }

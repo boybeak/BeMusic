@@ -6,9 +6,9 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateFilter;
 import com.nulldreams.adapter.DelegateParser;
-import com.nulldreams.adapter.impl.DelegateImpl;
 import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.EmptyDelegate;
@@ -43,7 +43,7 @@ public class SongListFragment extends RvFragment
     private DelegateFilter mFilter = new DelegateFilter() {
 
         @Override
-        public boolean accept(LayoutImpl impl) {
+        public boolean accept(DelegateAdapter adapter, LayoutImpl impl) {
             if (impl instanceof SongDelegate) {
                 SongDelegate songDelegate = (SongDelegate)impl;
                 boolean result = songDelegate.getSource().equals(PlayManager.getInstance(getContext()).getCurrentSong());
@@ -58,6 +58,7 @@ public class SongListFragment extends RvFragment
             }
             return false;
         }
+
     };
 
     private SongDecoration mSongDecoration;
@@ -67,8 +68,7 @@ public class SongListFragment extends RvFragment
         super.onActivityCreated(savedInstanceState);
         mSongDecoration = new SongDecoration(getContext());
         getRecyclerView().addItemDecoration(mSongDecoration);
-        List<Song> songs = PlayManager.getInstance(getContext()).getTotalList();
-        setSongList(songs);
+        PlayManager.getInstance(getContext()).getTotalListAsync(this);
     }
 
     @Override
@@ -116,9 +116,10 @@ public class SongListFragment extends RvFragment
         if (songList != null && !songList.isEmpty()) {
             getAdapter().addAll(songList, new DelegateParser<Song>() {
                 @Override
-                public DelegateImpl parse(Song data) {
+                public LayoutImpl parse(DelegateAdapter adapter, Song data) {
                     return new SongDelegate(data);
                 }
+
             });
         } else {
             getAdapter().add(new EmptyDelegate(getContext(), R.string.text_empty_msg_songs));

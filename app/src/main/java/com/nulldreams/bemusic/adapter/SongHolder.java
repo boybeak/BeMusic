@@ -48,8 +48,14 @@ public class SongHolder extends AbsViewHolder<SongDelegate> {
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PlayManager.getInstance(context).dispatch(song);
+                PlayManager.getInstance(context).dispatch(song, "item click");
             }
         });
+    }
+
+    @Override
+    public void onViewRecycled(Context context) {
+        super.onViewRecycled(context);
+        Glide.clear(thumbIv);
     }
 }

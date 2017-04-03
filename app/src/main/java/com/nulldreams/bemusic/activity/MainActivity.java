@@ -158,10 +158,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mFragmentArray = new RvFragment[mLength];
-        mFragmentArray[0] = new SongListFragment();
-        mFragmentArray[1] = new AlbumListFragment();
-
         mDrawerLayout = (DrawerLayout)findViewById(R.id.main_drawer);
         mCoorLayout = (CoordinatorLayout)findViewById(R.id.main_coordinator_layout);
         mTb = (Toolbar)findViewById(R.id.main_tool_bar);
@@ -184,9 +180,6 @@ public class MainActivity extends AppCompatActivity
         mHeaderCover = (RatioImageView)mNavView.getHeaderView(0).findViewById(R.id.header_cover);
         mAvatarIv = (ImageView)mNavView.getHeaderView(0).findViewById(R.id.header_avatar);
         mHeaderCover.setOnClickListener(mClickListener);
-
-        mVp.setAdapter(new VpAdapter(getSupportFragmentManager()));
-        mTl.setupWithViewPager(mVp);
 
         /*if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             getWindow().getDecorView().setSystemUiVisibility(
@@ -218,6 +211,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void init () {
+
+        mFragmentArray = new RvFragment[mLength];
+        mFragmentArray[0] = new SongListFragment();
+        mFragmentArray[1] = new AlbumListFragment();
+
+        mVp.setAdapter(new VpAdapter(getSupportFragmentManager()));
+        mTl.setupWithViewPager(mVp);
+
         SharedPreferences sharedPreferences = getSharedPreferences(getPackageName(), MODE_PRIVATE);
         int id = sharedPreferences.getInt("rule", 0);
         Rule rule = null;

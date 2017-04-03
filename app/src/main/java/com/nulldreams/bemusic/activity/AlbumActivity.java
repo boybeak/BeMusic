@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
+import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
 import com.nulldreams.media.manager.PlayManager;
@@ -77,7 +78,7 @@ public class AlbumActivity extends AppCompatActivity {
         if (songList != null) {
             mAdapter.addAll(songList, new DelegateParser<Song>() {
                 @Override
-                public DelegateImpl parse(Song data) {
+                public LayoutImpl parse(DelegateAdapter adapter, Song data) {
                     return new SongDelegate(data);
                 }
             });

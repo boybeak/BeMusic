@@ -40,6 +40,7 @@ import com.bumptech.glide.request.target.SimpleTarget;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
+import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.Intents;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.SongDelegate;
@@ -94,19 +95,24 @@ public class PlayDetailActivity extends AppCompatActivity implements PlayManager
     };
 
     private void showQuickList () {
-        BottomSheetDialog dialog = new BottomSheetDialog(this);
-        RecyclerView rv = new RecyclerView(this);
-        rv.setLayoutManager(new LinearLayoutManager(this));
-        DelegateAdapter adapter = new DelegateAdapter(this);
-        adapter.addAll(PlayManager.getInstance(this).getTotalList(), new DelegateParser<Song>() {
-            @Override
-            public DelegateImpl parse(Song data) {
-                return new SongDelegate(data);
-            }
-        });
-        rv.setAdapter(adapter);
-        dialog.setContentView(rv);
-        dialog.show();
+        List<Song> songs = PlayManager.getInstance(this).getTotalList();
+        if (songs != null && !songs.isEmpty()) {
+            BottomSheetDialog dialog = new BottomSheetDialog(this);
+            RecyclerView rv = new RecyclerView(this);
+            rv.setLayoutManager(new LinearLayoutManager(this));
+
+            DelegateAdapter adapter = new DelegateAdapter(this);
+            adapter.addAll(songs, new DelegateParser<Song>() {
+                @Override
+                public LayoutImpl parse(DelegateAdapter adapter, Song data) {
+                    return new SongDelegate(data);
+                }
+            });
+            rv.setAdapter(adapter);
+
+            dialog.setContentView(rv);
+            dialog.show();
+        }
     }
 
     private boolean isSeeking = false;

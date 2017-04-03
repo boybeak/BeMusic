@@ -10,6 +10,7 @@ import android.view.View;
 import com.nulldreams.adapter.DelegateAdapter;
 import com.nulldreams.adapter.DelegateParser;
 import com.nulldreams.adapter.impl.DelegateImpl;
+import com.nulldreams.adapter.impl.LayoutImpl;
 import com.nulldreams.bemusic.R;
 import com.nulldreams.bemusic.adapter.AlbumDecoration;
 import com.nulldreams.bemusic.adapter.AlbumDelegate;
@@ -78,7 +79,7 @@ public class AlbumListFragment extends RvFragment implements PlayManager.Callbac
         } else {
             mAdapter.addAll(albums, new DelegateParser<Album>() {
                 @Override
-                public DelegateImpl parse(Album data) {
+                public LayoutImpl parse(DelegateAdapter adapter, Album data) {
                     return new AlbumDelegate(data);
                 }
             });

@@ -48,12 +48,6 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
 
     private static final String TAG = PlayManager.class.getSimpleName();
 
-    /*public static final String
-            ACTION_NOTIFICATION_DELETE = "com.nulldreams.music.Action.ACTION_NOTIFICATION_DELETE",
-            ACTION_REMOTE_PLAY_PAUSE = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_PLAY_PAUSE",
-            ACTION_REMOTE_PREVIOUS = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_PREVIOUS",
-            ACTION_REMOTE_NEXT = "com.nulldreams.music.Action.Remote.ACTION_REMOTE_NEXT";*/
-
     private static PlayManager sManager = null;
 
     public synchronized static PlayManager getInstance (Context context) {
@@ -68,10 +62,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((PlayService.PlayBinder)service).getService();
             mService.setPlayStateChangeListener(PlayManager.this);
-            Log.v(TAG, "onServiceConnected");
+            Log.v(TAG, "onServiceConnected " + mSong);
             startRemoteControl();
             if (!isPlaying()) {
-                dispatch(mSong);
+                dispatch(mSong, "onServiceConnected");
             }
         }
 
@@ -162,6 +156,10 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
         mCallbacks = new ArrayList<>();
         mProgressCallbacks = new ArrayList<>();
         mHandler = new Handler();
+
+    }
+
+    public void getTotalListAsync(final Callback callback) {
         new AsyncTask<Context, Integer, List<Song>>() {
 
             @Override
@@ -181,12 +179,14 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
             protected void onPostExecute(List<Song> songs) {
                 mTotalList = songs;
                 mCurrentList = mTotalList;
-                /*bindPlayService();
-                startPlayService();*/
+                bindPlayService();
+                startPlayService();
                 for (Callback callback : mCallbacks) {
                     callback.onPlayListPrepared(songs);
                     callback.onAlbumListPrepared(mTotalAlbumList);
                 }
+                callback.onPlayListPrepared(songs);
+                callback.onAlbumListPrepared(mTotalAlbumList);
             }
         }.execute(mContext);
     }
@@ -249,7 +249,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      *  dispatch the current song
      */
     public void dispatch () {
-        dispatch(mSong);
+        dispatch(mSong, "dispatch ()");
     }
 
     /**
@@ -259,17 +259,18 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      * @see Song;
      * @see com.nulldreams.media.manager.ruler.Rule#next(Song, List, boolean);
      */
-    public void dispatch(final Song song) {
+    public void dispatch(final Song song, String by) {
+        Log.v(TAG, "dispatch BY=" + by);
         Log.v(TAG, "dispatch song=" + song);
         Log.v(TAG, "dispatch getAudioFocus mService=" + mService);
-        if (mCurrentList == null || mCurrentList.isEmpty()) {
+        if (mCurrentList == null || mCurrentList.isEmpty() || song == null) {
             return;
         }
         //mCurrentAlbum = null;
         if (mService != null) {
             if (song == null && mSong == null) {
                 Song defaultSong = mPlayRule.next(song, mCurrentList, false);
-                dispatch(defaultSong);
+                dispatch(defaultSong, "dispatch(final Song song, String by)");
             } else if (song.equals(mSong)) {
                 if (mService.isStarted()) {
                     //Do really this action by user
@@ -331,7 +332,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
      * @param isUserAction
      */
     private void next(boolean isUserAction) {
-        dispatch(mPlayRule.next(mSong, mCurrentList, isUserAction));
+        dispatch(mPlayRule.next(mSong, mCurrentList, isUserAction), "next(boolean isUserAction)");
     }
 
     /**
@@ -342,7 +343,7 @@ public class PlayManager implements PlayService.PlayStateChangeListener {
     }
 
     private void previous (boolean isUserAction) {
-        dispatch(mPlayRule.previous(mSong, mCurrentList, isUserAction));
+        dispatch(mPlayRule.previous(mSong, mCurrentList, isUserAction), "previous (boolean isUserAction)");
     }
 
     /**

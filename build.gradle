@@ -21,6 +21,18 @@ allprojects {
     }
 }
 
+ext {
+    compileSdkVersion=25
+    buildToolsVersion="25.0.2"
+    minSdkVersion=15
+    targetSdkVersion=25
+
+    supportLibVersion='25.3.1'
+    okHttpVersion='3.6.0'
+    retrofitVersion='2.2.0'
+    glideVersion='3.7.0'
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
